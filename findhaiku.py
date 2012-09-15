@@ -1,16 +1,34 @@
 #!/usr/bin/python
 
-import os.path, subprocess, StringIO
+#TODO: check all dependancies needed
+
+import os.path, subprocess, StringIO, re, curses, nltk, re, io, getopt, sys
+from curses.ascii import isdigit
+from nltk.corpus import cmudict
+d = cmudict.dict() 
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
-debug_enabled = True
+#TODO:Rewrite this dictionary stuff
+unknownWordsList = []
+#unknownMathList = []
+customDictionary = {"bredon":2, "homology":4, "homotopy":4, "functor":2, "functors":2, "finiteness":3, "organising":4, "homological":5, "quotients":2, "pointwise":2, "familiarised":4, "pro-finite":3}
+
+class UnknownWordException(Exception):
+       def __init__(self, value):
+           self.word = value
+       def __str__(self):
+           return repr(self.word)
+
+class LoopException(Exception): pass
+
+debug_enabled = False
 def debug(string):
   global debug_enabled
   if debug_enabled:
     print string  
 
-def nsyl(word): 
+def nsyl(word):  #Finds number of syllables in a word
     global unknownWordsList 
     #check for word "type" - alphanumberic etc
     if re.match("^[a-z']+$", word.lower()):      
@@ -49,15 +67,16 @@ def splitAtPunctuation(block):  #Attempts to split paragraphs into sentances
       block = block.replace(punctuation[i],",")
     return block.split(",")
 
-def getHaikuList(rawString):    
+def getHaikuList(raw_text):    
     haikuFound = []
     
-    paragraphs = splitAtParagraph(rawString)
-    debugPrint ("Paragraphs:" + str(paragraphs) + "\n---------------------------------------------------------\n")
+    paragraphs = raw_text.split("\n\n")
+
+    debug ("Paragraphs:" + str(paragraphs) + "\n---------------------------------------------------------\n")
     
     for paragraph in paragraphs:
       paragraphSplitAtPunctuation = splitAtPunctuation(paragraph)
-      debugPrint ("Paragraph Split at punctuation: " + str(paragraphSplitAtPunctuation))
+      debug ("Paragraph Split at punctuation: " + str(paragraphSplitAtPunctuation))
       
       #TODO : new data for each paragraph!!!
       data = []
@@ -66,17 +85,17 @@ def getHaikuList(rawString):
 	  if block.strip()!="":
 	    try:
 	      data.append( (sum(nsylBlock(block)), block) )
-      	      debugPrint("Appending data:" + str ((sum(nsylBlock(block)), block))  + "\n----------------------------------------------\n\n")
+      	      debug("Appending data:" + str ((sum(nsylBlock(block)), block))  + "\n----------------------------------------------\n\n")
 	    
 	    except UnknownWordException as e:
 	      #Throw away block with unknown word, regard that block as splitting paragraph into two new paragraphs
-	      debugPrint("Unknown word found: " + e.word + "\nAppending new blocks \n")
+	      debug("Unknown word found: " + e.word + "\nAppending new blocks \n")
 	      #TODO: appending at correct place would be cleaner?
 	      
 	      if paragraphSplitAtPunctuation[0:i]: paragraphs += [".".join(paragraphSplitAtPunctuation[0:i])]
 	      if paragraphSplitAtPunctuation[i+1:]: paragraphs += [".".join(paragraphSplitAtPunctuation[i+1:])]
 	      
-	      debugPrint("New Paragraphs: " + str(paragraphs) + "\n------------------------------------------\n\n")
+	      debug("New Paragraphs: " + str(paragraphs) + "\n------------------------------------------\n\n")
 	      
 	      raise LoopException
 	    
@@ -89,42 +108,69 @@ def getHaikuList(rawString):
 	newHaikuList = []
       
       if newHaikuList: 
-	debugPrint("Found Haiku(?): " + str(newHaikuList))
+	debug("Found Haiku(?): " + str(newHaikuList))
       else:
-	debugPrint("Found no Haiku in this block")
+	debug("Found no Haiku in this block")
     
       haikuFound += newHaikuList
     return haikuFound    
     
-    
+   
+#TODO: This has a horrible return value, fix it
 def find_haiku(raw_tex):
-  
-  ##########################################################################
+  def usage():  print "Usage: --input\t<INPUT FILE>\n\t-d\tdebug mode"
+
   # PASS DATA THROUGH untex TO GET raw_text from raw_tex
-  ##########################################################################
   if not os.path.isfile("/usr/bin/untex"):
     print "untex doesn't exist, failing"
     exit(1) #Generic error code
-    
   try:
     untex_process = subprocess.Popen(["untex","-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
     raw_text = untex_process.communicate(input=raw_tex)[0]
     debug("untex successfully replied with: " + raw_text + "\n\n")
-    
   except subprocess.CalledProcessError as e:
     print "Failed to run untex, subprocess.CalledProcessError: " + str(e)
   untex_process.stdin.close()
 
+  return getHaikuList(raw_text)
+
+if __name__=="__main__":  
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], ":d", ["input="])
+  except getopt.GetoptError, err:
+    print str(err) # will print something like "option -a not recognized"
+    usage()
+    sys.exit(2)
+  input_file = None
+  for o, a in opts:
+    if o == "--input":
+      input_file = a
+    elif o == "-d":
+      global debug_enabled
+      debug_enabled = True
+    else:
+      print "Unhandled Option\n"
+      usage()
+      sys.exit(2)
+  if not input_file:
+    print "No input file set, use --input option."
+    sys.exit(2)
+      
+  try:
+    raw_tex = open(input_file, "r").read()
+  except IOError as e:
+    print "Can't find input file.\n"
+    sys.exit(2)
   
-  # Split into paragraphs
-  paragraphs = raw_text.split("\n\n")
-  #pp.pprint(paragraphs)
-  
-  
-  
-if __name__=="__main__":
-  find_haiku(open("5Month.tex", "r").read())  
-  
+  haiku_list = find_haiku(raw_tex)  
+  if len(haiku_list)==0:
+    print "Found no Haiku, sorry :("
+  else:
+    print "Found the following Haiku:"
+    for haiku in haiku_list:
+      print haiku
+
+
 """
 #http://www.onebloke.com/2011/06/counting-syllables-accurately-in-python-on-google-app-engine/
 
