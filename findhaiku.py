@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-#untex -gascii -uascii -o -e sample2exe
-
 import os.path, subprocess, StringIO
 import pprint
 pp = pprint.PrettyPrinter(indent=4)

@@ -2,6 +2,11 @@
 
 #This is the main program
 
+#Requirements:
+#rssparser: feedparser, re, urllib, tarfile, gzip, StringIO, lxml
+#twitter: os, sys, cgi, latest version of oauth2 in current dir
+#findhaiku: os, subprocess, StringIO, [pprint]
+
 #TODO: Add check for previously parsed files, etc
 
 from twitter import post_status_to_twitter
