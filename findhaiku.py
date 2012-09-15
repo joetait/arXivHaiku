@@ -11,10 +11,10 @@ pp = pprint.PrettyPrinter(indent=4)
 
 #TODO Check how it behaves with "-" used as a punctuation seperator..
 
-#TODO:Rewrite this dictionary stuff
+#TODO:Rewrite this dictionary stuff, use a custom class
 unknownWordsList = []
 #unknownMathList = []
-customDictionary = {"bredon":2, "homology":4, "homotopy":4, "functor":2, "functors":2, "finiteness":3, "organising":4, "homological":5, "quotients":2, "pointwise":2, "familiarised":4, "pro-finite":3, "whitecaps":2, "signboard":2}
+customDictionary = {"abelian":3, "bredon":2, "homology":4, "homotopy":4, "functor":2, "functors":2, "finiteness":3, "organising":4, "homological":5, "quotients":2, "pointwise":2, "familiarised":4, "pro-finite":3, "whitecaps":2, "signboard":2}
 
 class UnknownWordException(Exception):
        def __init__(self, value):
@@ -40,7 +40,7 @@ def nsyl(word):  #Finds number of syllables in a word
 	return customDictionary[word]
       except KeyError as e:	
 	unknownWordsList += [word]
-	raise UnknownWordException("Unknown Word: " + word);
+	raise UnknownWordException(word);
       
     word = word.lower() 
     
@@ -96,8 +96,12 @@ def find_haiku_in_blocks(blocks):
 def find_haiku_in_text(raw_text):    
     haiku_found = []    
     paragraphs = raw_text.split("\n\n")
+    #ignore single line breaks, tabs - replace with spaces
+    paragraphs = [p.replace("\n", " ").replace("\t", " ") for p in paragraphs]
+    
     for paragraph in paragraphs:
       blocks = split_at_punctuation(paragraph)
+      print blocks
       haiku_found += find_haiku_in_blocks(blocks)
     return haiku_found
       
@@ -116,12 +120,10 @@ def find_haiku_in_tex(raw_tex):
     print "Failed to run untex, subprocess.CalledProcessError: " + str(e)
   untex_process.stdin.close()
 
-  return getHaikuList(raw_text)
+  return find_haiku_in_text(raw_text)
 
-if __name__=="__main__":  
-  print find_haiku_in_text("Whitecaps on the bay: A broken signboard banging, In the April wind.\n\n\n\nWhitecaps on the bay: A broken signboard banging, In the April wind.")
-  exit(0)
   
+if __name__=="__main__":  
   try:
     opts, args = getopt.getopt(sys.argv[1:], ":d", ["input="])
   except getopt.GetoptError, err:
