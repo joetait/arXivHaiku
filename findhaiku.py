@@ -68,26 +68,34 @@ def nsylBlock(block): #Splits blocks of words into a list of their syllable-leng
 	x += nsylMath(piece)
     return x
 
-    
-def splitAtPunctuation(block):  #Attempts to split paragraphs into sentances
-    punctuation = [".","!","(",")",":"] #"," not needed
-    
-    for i in range(0,len(punctuation)):
-      block = block.replace(punctuation[i],",")
-    return block.split(",")
-
     """
     
+#returns list of tuples of form (block,ending_punctuation)
+def split_at_punctuation(paragraph):  
+  punctuation = [".","!","(",")",":",",","?","[","]"] 
+  blocks = [paragraph]
+  for element in punctuation:
+    newblocks = []
+    for block in blocks:
+      split_at_element = block.split(element)
+      newblocks += [block + element for block in split_at_element[:-1]]+[split_at_element[-1]]
+    blocks = newblocks
+    print blocks
+  return [(block[:-1],block[-1]) for block in blocks if block!=""]
+    
+    
+#TODO WTF does this output?
 def getHaikuList(raw_text):    
     haikuFound = []
     
+    #split into paragraphs
     paragraphs = raw_text.split("\n\n")
-
-    debug ("Paragraphs:" + str(paragraphs) + "\n---------------------------------------------------------\n")
+    #debug ("Paragraphs:" + str(paragraphs) + "\n---------------------------------------------------------\n")
     
     for paragraph in paragraphs:
-      paragraphSplitAtPunctuation = splitAtPunctuation(paragraph)
-      debug ("Paragraph Split at punctuation: " + str(paragraphSplitAtPunctuation))
+      blocks = split_at_punctuation(paragraph)
+      
+      #debug ("Paragraph Split at punctuation: " + str(paragraphSplitAtPunctuation))
       
       #TODO : new data for each paragraph!!!
       data = []
@@ -146,7 +154,7 @@ def find_haiku(raw_tex):
   return getHaikuList(raw_text)
 
 if __name__=="__main__":  
-  print nsyl("22")
+  print split_at_punctuation("Hello, this is a text.  Whats going on?")
   exit(0)
   
   try:
