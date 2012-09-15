@@ -9,6 +9,8 @@ d = cmudict.dict()
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
+#TODO Check how it behaves with "-" used as a punctuation seperator..
+
 #TODO:Rewrite this dictionary stuff
 unknownWordsList = []
 #unknownMathList = []
@@ -30,27 +32,33 @@ def debug(string):
 
 def nsyl(word):  #Finds number of syllables in a word
     global unknownWordsList 
-    #check for word "type" - alphanumberic etc
-    if re.match("^[a-z']+$", word.lower()):      
+    
+    def get_nsyl_from_custom_dict(word):
+      global unknownWordsList 
+      try:
+	return customDictionary[word]
+      except KeyError as e:	
+	unknownWordsList += [word]
+	raise UnknownWordException("Unknown Word: " + word);
+      
+    word = word.lower() 
+    
+    #If the word is hypenated then use the sum of the word on each side of the dash
+    if "-" in word:
+      return sum([nsyl(w) for w in word.split("-")])
+    
+    #check for word "type" - alphanumeric etc
+    if re.match("^[a-z']+$", word):   #alphanumeric word
       try:
 	#returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
 	return [len(list(y for y in x if isdigit(y[-1]))) for x in d[word.lower()]][0]
       except KeyError as e:
-	#Try extra dictionary
-	try:
-	  return customDictionary[word.lower()]
-	except KeyError as e:	
-	  unknownWordsList += [word]
-	  raise UnknownWordException("Unknown Word: " + word);
-    elif word.strip() == "-":
-      return 0
-    elif re.match("^[1-9]+$", word.lower()):
-      #TODO: make a less ugly ugly fix - just returns number of numbers...
-      return len(word.strip())
+        return get_nsyl_from_custom_dict(word)
+        
     else: 
-      unknownWordsList += [word]
-      raise UnknownWordException("Unknown Word: " + word);
-      
+      return get_nsyl_from_custom_dict(word)
+
+      """
 def nsylBlock(block): #Splits blocks of words into a list of their syllable-lengths
     x = []
     for i, piece in enumerate(block.split("$")):
@@ -59,6 +67,7 @@ def nsylBlock(block): #Splits blocks of words into a list of their syllable-leng
       if i % 2 == 1:
 	x += nsylMath(piece)
     return x
+
     
 def splitAtPunctuation(block):  #Attempts to split paragraphs into sentances
     punctuation = [".","!","(",")",":"] #"," not needed
@@ -67,6 +76,8 @@ def splitAtPunctuation(block):  #Attempts to split paragraphs into sentances
       block = block.replace(punctuation[i],",")
     return block.split(",")
 
+    """
+    
 def getHaikuList(raw_text):    
     haikuFound = []
     
@@ -135,6 +146,9 @@ def find_haiku(raw_tex):
   return getHaikuList(raw_text)
 
 if __name__=="__main__":  
+  print nsyl("22")
+  exit(0)
+  
   try:
     opts, args = getopt.getopt(sys.argv[1:], ":d", ["input="])
   except getopt.GetoptError, err:
