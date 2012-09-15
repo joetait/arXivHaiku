@@ -2,13 +2,131 @@
 
 #untex -gascii -uascii -o -e sample2exe
 
-import os.path
+import os.path, subprocess, StringIO
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
 
-if __name__=="__main__":
-  if not os.path.isfile("/usr/bin/untexs"):
+debug_enabled = True
+def debug(string):
+  global debug_enabled
+  if debug_enabled:
+    print string  
+
+def nsyl(word): 
+    global unknownWordsList 
+    #check for word "type" - alphanumberic etc
+    if re.match("^[a-z']+$", word.lower()):      
+      try:
+	#returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
+	return [len(list(y for y in x if isdigit(y[-1]))) for x in d[word.lower()]][0]
+      except KeyError as e:
+	#Try extra dictionary
+	try:
+	  return customDictionary[word.lower()]
+	except KeyError as e:	
+	  unknownWordsList += [word]
+	  raise UnknownWordException("Unknown Word: " + word);
+    elif word.strip() == "-":
+      return 0
+    elif re.match("^[1-9]+$", word.lower()):
+      #TODO: make a less ugly ugly fix - just returns number of numbers...
+      return len(word.strip())
+    else: 
+      unknownWordsList += [word]
+      raise UnknownWordException("Unknown Word: " + word);
+      
+def nsylBlock(block): #Splits blocks of words into a list of their syllable-lengths
+    x = []
+    for i, piece in enumerate(block.split("$")):
+      if i % 2 == 0:
+	x += [nsyl(word) for word in piece.split()]
+      if i % 2 == 1:
+	x += nsylMath(piece)
+    return x
+    
+def splitAtPunctuation(block):  #Attempts to split paragraphs into sentances
+    punctuation = [".","!","(",")",":"] #"," not needed
+    
+    for i in range(0,len(punctuation)):
+      block = block.replace(punctuation[i],",")
+    return block.split(",")
+
+def getHaikuList(rawString):    
+    haikuFound = []
+    
+    paragraphs = splitAtParagraph(rawString)
+    debugPrint ("Paragraphs:" + str(paragraphs) + "\n---------------------------------------------------------\n")
+    
+    for paragraph in paragraphs:
+      paragraphSplitAtPunctuation = splitAtPunctuation(paragraph)
+      debugPrint ("Paragraph Split at punctuation: " + str(paragraphSplitAtPunctuation))
+      
+      #TODO : new data for each paragraph!!!
+      data = []
+      try:
+	for (i, block) in enumerate(paragraphSplitAtPunctuation):
+	  if block.strip()!="":
+	    try:
+	      data.append( (sum(nsylBlock(block)), block) )
+      	      debugPrint("Appending data:" + str ((sum(nsylBlock(block)), block))  + "\n----------------------------------------------\n\n")
+	    
+	    except UnknownWordException as e:
+	      #Throw away block with unknown word, regard that block as splitting paragraph into two new paragraphs
+	      debugPrint("Unknown word found: " + e.word + "\nAppending new blocks \n")
+	      #TODO: appending at correct place would be cleaner?
+	      
+	      if paragraphSplitAtPunctuation[0:i]: paragraphs += [".".join(paragraphSplitAtPunctuation[0:i])]
+	      if paragraphSplitAtPunctuation[i+1:]: paragraphs += [".".join(paragraphSplitAtPunctuation[i+1:])]
+	      
+	      debugPrint("New Paragraphs: " + str(paragraphs) + "\n------------------------------------------\n\n")
+	      
+	      raise LoopException
+	    
+      except LoopException: continue
+      
+      #Search for Haiku
+      if data:
+	newHaikuList = [data[i:i+3] for i in range(0, len(zip(*data)[0])-2) if zip(*data)[0][i:i+3] == (5, 7, 5) ]
+      else:
+	newHaikuList = []
+      
+      if newHaikuList: 
+	debugPrint("Found Haiku(?): " + str(newHaikuList))
+      else:
+	debugPrint("Found no Haiku in this block")
+    
+      haikuFound += newHaikuList
+    return haikuFound    
+    
+    
+def find_haiku(raw_tex):
+  
+  ##########################################################################
+  # PASS DATA THROUGH untex TO GET raw_text from raw_tex
+  ##########################################################################
+  if not os.path.isfile("/usr/bin/untex"):
     print "untex doesn't exist, failing"
+    exit(1) #Generic error code
+    
+  try:
+    untex_process = subprocess.Popen(["untex","-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+    raw_text = untex_process.communicate(input=raw_tex)[0]
+    debug("untex successfully replied with: " + raw_text + "\n\n")
+    
+  except subprocess.CalledProcessError as e:
+    print "Failed to run untex, subprocess.CalledProcessError: " + str(e)
+  untex_process.stdin.close()
 
-
+  
+  # Split into paragraphs
+  paragraphs = raw_text.split("\n\n")
+  #pp.pprint(paragraphs)
+  
+  
+  
+if __name__=="__main__":
+  find_haiku(open("5Month.tex", "r").read())  
+  
 """
 #http://www.onebloke.com/2011/06/counting-syllables-accurately-in-python-on-google-app-engine/
 
