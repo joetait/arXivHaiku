@@ -24,8 +24,8 @@ class CustomDictionary(object):
       exit(1)
     except EOFError as e:  
       print "Failed to open/read from dictionary file: " + str(e) + "\nFatal"
-      #exit(1)
-      self.__dictionary = {}
+      exit(1)
+      
     try:  
       ignored_words_file = open("ignoredwords", "r")
       self.__ignored_words = pickle.load(ignored_words_file)
@@ -59,7 +59,6 @@ class CustomDictionary(object):
       ignored_words_file.close()
     except IOError as e:
       debug("Failed to save to dictionary file: " + str(e))
-     
      
   def get_nsyl(self, word):
     word = word.lower()
