@@ -28,8 +28,8 @@ def nsyl(word):  #Finds number of syllables in a word
     #check for word "type" - alphanumeric etc
     if re.match("^[a-z']+$", word):   #alphanumeric word
       try:
-	#returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
-	return [len(list(y for y in x if isdigit(y[-1]))) for x in d[word.lower()]][0]
+        #returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
+        return [len(list(y for y in x if isdigit(y[-1]))) for x in d[word.lower()]][0]
       except KeyError as e:
         return custom_dictionary.get_nsyl(word)
     else: 
