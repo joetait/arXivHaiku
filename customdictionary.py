@@ -1,5 +1,6 @@
 #!/usr/bin/python
-import pickle, getopt, sys
+import  getopt, sys
+import pickle
 
 #TODO: deal with unknownwordsbetter
 
@@ -10,8 +11,10 @@ class UnknownWordException(Exception):
     return repr(self.word)
 
 class CustomDictionary(object):
+  
   def __init__(self):
     object.__init__(self)
+    self.__mypickle = pickle #keep a ref for this to use in del, otherwise pickle is deleted too sooon
     try:
       dictionary_file = open("customdictionary", "r")
       self.__dictionary = pickle.load(dictionary_file)
@@ -21,7 +24,8 @@ class CustomDictionary(object):
       exit(1)
     except EOFError as e:  
       print "Failed to open/read from dictionary file: " + str(e) + "\nFatal"
-      exit(1)
+      #exit(1)
+      self.__dictionary = {}
     try:  
       ignored_words_file = open("ignoredwords", "r")
       self.__ignored_words = pickle.load(ignored_words_file)
@@ -41,20 +45,22 @@ class CustomDictionary(object):
       
   def __del__(self):
     try:
+      
       dictionary_file = open("customdictionary", "w")
-      pickle.dump(self.__dictionary, dictionary_file)
+      self.__mypickle.dump(self.__dictionary, dictionary_file)
       dictionary_file.close()
       
       unknownwords_file = open("unknownwords", "w")
-      pickle.dump(self.__unknown_words, unknownwords_file)
+      self.__mypickle.dump(self.__unknown_words, unknownwords_file)
       unknownwords_file.close()
       
       ignored_words_file = open("ignoredwords", "w")
-      pickle.dump(self.__ignored_words, ignored_words_file)
+      self.__mypickle.dump(self.__ignored_words, ignored_words_file)
       ignored_words_file.close()
     except IOError as e:
       debug("Failed to save to dictionary file: " + str(e))
-      
+     
+     
   def get_nsyl(self, word):
     word = word.lower()
     try:
@@ -71,7 +77,10 @@ class CustomDictionary(object):
       if word in self.__ignored_words or word in self.__dictionary:
         print "Word in ignored_words or dictionary, this shouldn't happen."
       
-      x = raw_input("How many syllables in " + word + "?")
+      #TODO: This is not ideal, shouldn't immediately break, should remove words from unknownwords
+      x = raw_input("x to exit, or how many syllables in " + word + "?")
+      if x == "x":
+	break
       if (x == "" or (not x.isdigit()) or int(x) < 1 or int(x) > 9):
         print "Adding word to ignore list - didn't get a number, or got a stupid number"
         self.__ignored_words += [word]

@@ -37,7 +37,7 @@ def nsyl(word):  #Finds number of syllables in a word
     
 #returns list of tuples of form (block,ending_punctuation)
 def split_at_punctuation(paragraph):  
-  punctuation = [".","!","(",")",":",",","?","[","]"] 
+  punctuation = [".","!","(",")",":",",","?","[","]", ";"] 
   blocks = [paragraph]
   for element in punctuation:
     newblocks = []

@@ -66,5 +66,7 @@ if __name__=="__main__":
       print "Found the following Haiku:"
       for haiku in haiku_list:
 	print haiku
-    print "Press enter to continue"
-    raw_input()
+    
+    x = raw_input("Press enter to continue, or x to quit")
+    if x == "x": break
+    
