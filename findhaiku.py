@@ -17,7 +17,9 @@ def debug(string):
   if debug_enabled: print string  
 
 def nsyl(word):  #Finds number of syllables in a word
-    word = word.lower() 
+    word = word.lower().strip()
+    
+    if word == "": return 0
     
     #If the word is hypenated then use the sum of the word on each side of the dash
     if "-" in word:
