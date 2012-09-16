@@ -5,34 +5,24 @@ from curses.ascii import isdigit
 from nltk.corpus import cmudict
 d = cmudict.dict() 
 
+from  customdictionary import get_nsyl_from_custom_dict, UnknownWordException
+
 #TODO Check how it behaves with "-" used as a punctuation seperator..
-
-#TODO:Rewrite this dictionary stuff, use a custom class
-unknownWordsList = []
-#unknownMathList = []
-customDictionary = {"abelian":3, "bredon":2, "homology":4, "homotopy":4, "functor":2, "functors":2, "finiteness":3, "organising":4, "homological":5, "quotients":2, "pointwise":2, "familiarised":4, "pro-finite":3, "whitecaps":2, "signboard":2}
-
-class UnknownWordException(Exception):
-       def __init__(self, value):
-           self.word = value
-       def __str__(self):
-           return repr(self.word)
 
 def debug(string): 
   if debug_enabled: print string  
 
 def nsyl(word):  #Finds number of syllables in a word
-    
     global unknownWordsList 
     
-    def get_nsyl_from_custom_dict(word):
+    """def get_nsyl_from_custom_dict(word):
       global unknownWordsList 
       try:
 	return customDictionary[word]
       except KeyError as e:	
 	unknownWordsList += [word]
 	raise UnknownWordException(word);
-      
+      """
     word = word.lower() 
     
     #If the word is hypenated then use the sum of the word on each side of the dash
@@ -125,8 +115,7 @@ if __name__=="__main__":
   for o, a in opts:
     if o == "--input":
       input_file = a
-    elif o == "-d":
-      
+    elif o == "-d":    
       debug_enabled = True
     else:
       print "Unhandled Option\n"
