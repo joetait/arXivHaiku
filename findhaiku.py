@@ -1,13 +1,9 @@
 #!/usr/bin/python
 
-#TODO: check all dependancies needed
-
-import os.path, subprocess, StringIO, re, curses, nltk, re, io, getopt, sys
+import os.path, subprocess, StringIO, re, io, getopt, sys
 from curses.ascii import isdigit
 from nltk.corpus import cmudict
 d = cmudict.dict() 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
 
 #TODO Check how it behaves with "-" used as a punctuation seperator..
 
@@ -22,13 +18,8 @@ class UnknownWordException(Exception):
        def __str__(self):
            return repr(self.word)
 
-class LoopException(Exception): pass
-
-debug_enabled = True
-def debug(string):
-  global debug_enabled
-  if debug_enabled:
-    print string  
+def debug(string): 
+  if debug_enabled: print string  
 
 def nsyl(word):  #Finds number of syllables in a word
     
@@ -101,13 +92,10 @@ def find_haiku_in_text(raw_text):
     
     for paragraph in paragraphs:
       blocks = split_at_punctuation(paragraph)
-      print blocks
       haiku_found += find_haiku_in_blocks(blocks)
     return haiku_found
       
 def find_haiku_in_tex(raw_tex):
-  def usage():  print "Usage: --input\t<INPUT FILE>\n\t-d\tdebug mode"
-
   # PASS DATA THROUGH untex TO GET raw_text from raw_tex
   if not os.path.isfile("/usr/bin/untex"):
     print "untex doesn't exist, failing"
@@ -122,8 +110,11 @@ def find_haiku_in_tex(raw_tex):
 
   return find_haiku_in_text(raw_text)
 
+def usage():  print "Usage: --input\t<INPUT FILE>\n\t-d\tdebug mode"  
   
 if __name__=="__main__":  
+  global debug_enabled
+  debug_enabled = False
   try:
     opts, args = getopt.getopt(sys.argv[1:], ":d", ["input="])
   except getopt.GetoptError, err:
@@ -135,7 +126,7 @@ if __name__=="__main__":
     if o == "--input":
       input_file = a
     elif o == "-d":
-      global debug_enabled
+      
       debug_enabled = True
     else:
       print "Unhandled Option\n"
