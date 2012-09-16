@@ -9,7 +9,6 @@
 #customdictionary
 
 #TODO: Add check for previously parsed files, etc
-#TODO: Rewrite customdictionary
 
 from twitter import post_status_to_twitter
 from rssparser import rssparse
