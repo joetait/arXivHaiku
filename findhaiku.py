@@ -5,24 +5,18 @@ from curses.ascii import isdigit
 from nltk.corpus import cmudict
 d = cmudict.dict() 
 
-from  customdictionary import get_nsyl_from_custom_dict, UnknownWordException
+from  customdictionary import CustomDictionary, UnknownWordException
+custom_dictionary = CustomDictionary()
 
 #TODO Check how it behaves with "-" used as a punctuation seperator..
+
+global debug_enabled
+debug_enabled = True
 
 def debug(string): 
   if debug_enabled: print string  
 
 def nsyl(word):  #Finds number of syllables in a word
-    global unknownWordsList 
-    
-    """def get_nsyl_from_custom_dict(word):
-      global unknownWordsList 
-      try:
-	return customDictionary[word]
-      except KeyError as e:	
-	unknownWordsList += [word]
-	raise UnknownWordException(word);
-      """
     word = word.lower() 
     
     #If the word is hypenated then use the sum of the word on each side of the dash
@@ -35,9 +29,9 @@ def nsyl(word):  #Finds number of syllables in a word
 	#returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
 	return [len(list(y for y in x if isdigit(y[-1]))) for x in d[word.lower()]][0]
       except KeyError as e:
-        return get_nsyl_from_custom_dict(word)
+        return custom_dictionary.get_nsyl(word)
     else: 
-      return get_nsyl_from_custom_dict(word)
+      return custom_dictionary.get_nsyl(word)
     
 #returns list of tuples of form (block,ending_punctuation)
 def split_at_punctuation(paragraph):  
@@ -91,8 +85,8 @@ def find_haiku_in_tex(raw_tex):
     print "untex doesn't exist, failing"
     exit(1) #Generic error code
   try:
-    untex_process = subprocess.Popen(["untex","-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
-    raw_text = untex_process.communicate(input=raw_tex)[0]
+    untex_process = subprocess.Popen(["untex","-m" ,"-uascii" ,"-gascii" ,"-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+    raw_text = untex_process.communicate(input=raw_tex.encode("ascii","ignore"))[0]
     debug("untex successfully replied with: " + raw_text + "\n\n")
   except subprocess.CalledProcessError as e:
     print "Failed to run untex, subprocess.CalledProcessError: " + str(e)

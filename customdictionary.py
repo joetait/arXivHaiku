@@ -1,21 +1,39 @@
 #!/usr/bin/python
-
-unknownWordsList = []
-customDictionary = {"abelian":3, "bredon":2, "homology":4, "homotopy":4, "functor":2, "functors":2, "finiteness":3, "organising":4, "homological":5, "quotients":2, "pointwise":2, "familiarised":4, "pro-finite":3, "whitecaps":2, "signboard":2}
-
+ 
+import pickle
+ 
 class UnknownWordException(Exception):
   def __init__(self, value):
    self.word = value
   def __str__(self):
     return repr(self.word)
 
-def get_nsyl_from_custom_dict(word):
-  global unknownWordsList 
-  try:
-    return customDictionary[word]
-  except KeyError as e:	
-    unknownWordsList += [word]
-    raise UnknownWordException(word);
+class CustomDictionary(object):
+  def __init__(self):
+    try:
+      dictionary_file = open("customdictionary", "r")
+      self.dictionary = pickle.load(dictionary_file)
+      dictionary_file.close()
+    except IOError as e:
+      debug("Failed to open/read from dictionary file: " + str(e))
+      #TODO: How to fail?
       
+  def __del__(self):
+    try:
+      dictionary_file = open("customdictionary", "w")
+      pickle.dump(self.dictionary, dictionary_file)
+      dictionary_file.close()
+    except IOError as e:
+      debug("Failed to save to dictionary file: " + str(e))
+      
+  def get_nsyl(self, word):
+    word = word.lower()
+    try:
+      return self.dictionary[word]
+    except KeyError as e:	
+      #unknownWordsList += [word]
+      raise UnknownWordException(word);
+
 if __name__=="__main__":
-  print "No tests here yet.."
+  customdictionary = CustomDictionary()
+  print customdictionary.get_nsyl("bredon")
