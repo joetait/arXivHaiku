@@ -20,6 +20,7 @@ def rssparse(feed_name="http://export.arxiv.org/rss/math?mirror=edu"):
 def parse_entry(entry):
     
     #Since this stuff is crucial, use utf8 ENCODE so as to catch ANY problems.  Rest uses decode with ignore.
+    #TODO: Check that this encoding stuff is done right..
     try:
       #authors = html.document_fromstring(feed.entries[0].author).text_content().encode("utf8").split(",")
       #authors = ["".join(e for e in y if (e.isalnum() or e == " ")) for y in authors]
