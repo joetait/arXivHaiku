@@ -60,7 +60,7 @@ def find_haiku_in_blocks(blocks):
 	data.append((sum([ nsyl(word) for word in block.split()]), block, ending_punctuation) )
 	#debug("Appending data:" + str ((sum(nsylBlock(block)), block))  + "\n----------------------------------------------\n\n")    
       except UnknownWordException as e:  #Recurse if problem found
-	log("Unknown word found: " + e.word)
+	#log("Unknown word found: " + e.word)
 	if blocks[0:i]: 
 	  haiku_found += find_haiku_in_blocks(blocks[0:i])
 	if blocks[i+1:]: 
@@ -104,6 +104,22 @@ def find_haiku_in_tex(raw_tex):
 def usage():  print "Usage: --input\t<INPUT FILE>\n\t-d\tdebug mode"  
   
 if __name__=="__main__":  
+  def setup_custom_logger(name):
+    #formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
+    formatter = logging.Formatter(fmt='%(asctime)s - %(module)s - %(message)s')
+    handler = logging.FileHandler("arXivHaiku.log")
+    handler.setFormatter(formatter)
+    
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    return logger
+    
+  logger = setup_custom_logger('mainLogger')
+  global log
+  log = logger.debug
+  log("Running findHaiku with __name__==__main__")
+
   global debug_enabled
   debug_enabled = False
   try:
