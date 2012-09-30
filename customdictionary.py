@@ -3,8 +3,10 @@ import  getopt, sys, pickle, logging
 
 #TODO: deal with unknownwordsbetter
 
-logger = logging.getLogger('mainLogger')
-log = logger.debug
+#If __name__=="__main__" then we will define the logger
+if __name__!="__main__":
+  global logger
+  logger = logging.getLogger('mainLogger')
 
 class UnknownWordException(Exception):
   def __init__(self, value):
@@ -17,18 +19,18 @@ class CustomDictionary(object):
   def __init__(self):
     object.__init__(self)
     self.__mypickle = pickle #keep a ref for this to use in del, otherwise pickle is deleted too sooon
-    log("Initialising customDictionary")
+    logger.info("Initialising customDictionary")
     try:
       dictionary_file = open("customdictionary", "r")
       self.__dictionary = pickle.load(dictionary_file)
       dictionary_file.close()
     except IOError as e:
       print "Failed to open/read from dictionary file: " + str(e) + "\nFatal"
-      log("Failed to open/read from dictionary file: " + str(e) + "\nFatal")
+      logger.critical("Failed to open/read from dictionary file: " + str(e) + "\nFatal")
       exit(1)
     except EOFError as e:  
       print "Failed to open/read from dictionary file: " + str(e) + "\nFatal"
-      log("Failed to open/read from dictionary file: " + str(e) + "\nFatal")
+      logger.critical("Failed to open/read from dictionary file: " + str(e) + "\nFatal")
       exit(1)
       
     try:  
@@ -41,12 +43,12 @@ class CustomDictionary(object):
       unknownwords_file.close()
     except IOError as e:
       print "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank"
-      log( "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank")
+      logger.warning( "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank")
       self.__unknown_words = []
       self.__ignored_words = []
     except EOFError as e:
       print "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank"      
-      log( "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank")
+      logger.warning( "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank")
       self.__unknown_words = []
       self.__ignored_words = []
       
@@ -65,7 +67,7 @@ class CustomDictionary(object):
       self.__mypickle.dump(self.__ignored_words, ignored_words_file)
       ignored_words_file.close()
     except IOError as e:
-      debug("Failed to save to dictionary file: " + str(e))
+      print ("Failed to save to dictionary file: " + str(e))
      
   def get_nsyl(self, word):
     word = word.lower()
@@ -78,6 +80,7 @@ class CustomDictionary(object):
 
   def sort_out_unknown_words(self):
     print "Sorting unknown words!"
+    logger.info("customDiction is sorting unknown words")
     print self.__unknown_words
     for word in self.__unknown_words:
       if word in self.__ignored_words or word in self.__dictionary:
@@ -98,21 +101,9 @@ class CustomDictionary(object):
     self.__unknown_words = []
     
 if __name__=="__main__":
-  def setup_custom_logger(name):
-    #formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
-    formatter = logging.Formatter(fmt='%(asctime)s - %(module)s - %(message)s')
-    handler = logging.FileHandler("arXivHaiku.log")
-    handler.setFormatter(formatter)
-    
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    return logger
-    
-  logger = setup_custom_logger('mainLogger')
-  global log
-  log = logger.debug
-  log("Running customDictionary with __name__==__main__")
+  import arxivhaikulogger
+  logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
+  logger.info("Running customDictionary with __name__==__main__")
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], ":tp", [])
@@ -124,7 +115,7 @@ if __name__=="__main__":
     if o == "-p":
       CustomDictionary().sort_out_unknown_words()
       exit(0)
-    elif o == "-t":    
+    elif o == "-t":  #Test!  
       customdictionary = CustomDictionary()
       try:
 	print customdictionary.get_nsyl("bredon")
@@ -134,7 +125,9 @@ if __name__=="__main__":
       exit(0)
     else:
       print "Unhandled Option\n"
+      logger.critical("Unhandled option")
       sys.exit(2)
   if not input_file:
     print "No input file set, use --input option."
+    logger.critical("No input file set")
     sys.exit(2)

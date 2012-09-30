@@ -13,7 +13,6 @@ if __name__!="__main__":
   global logger
   logger = logging.getLogger('mainLogger')
 
-
 #This class runs untex in a seperate thread with specified timeout - prevents untex from hanging entire program
 # initialise with no arguments and then run_untex(raw_tex) returns either untexified tex or an empty string on failure
 # Only need to initialise once, can then keep calling run
