@@ -33,17 +33,17 @@ class UntexThreadClass(object):
   def run_untex(self, raw_tex):
     self.raw_text = ""
     def untex_thread_target(raw_tex):
-      print "untex thread started"
+      logger.info("untex thread started")
       self.untex_process = subprocess.Popen(["untex","-m" ,"-uascii" ,"-gascii" ,"-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
       self.raw_text = self.untex_process.communicate(input=raw_tex.encode("ascii","ignore"))[0]
       self.untex_process.stdin.close()  # TODO: Do I need this?
-      print "untex thread finished."
+      logger.info("untex thread finished.")
     
     untex_thread = threading.Thread(target=untex_thread_target, kwargs={"raw_tex":raw_tex})
     untex_thread.start()
     untex_thread.join(self.__timeout)
     if untex_thread.is_alive():
-      print 'Process timeout, terminating process'
+      logger.warning('Process timeout, terminating process')
       self.untex_process.terminate()
       untex_thread.join()
     return self.raw_text
