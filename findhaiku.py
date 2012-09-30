@@ -9,7 +9,6 @@ from  customdictionary import CustomDictionary, UnknownWordException
 custom_dictionary = CustomDictionary()
 
 #If __name__=="__main__" then we will define the logger
-#logger = None
 if __name__!="__main__":
   global logger
   logger = logging.getLogger('mainLogger')
