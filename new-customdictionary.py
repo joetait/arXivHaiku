@@ -1,7 +1,8 @@
 #!/usr/bin/python
 #If __name__=="__main__" then we will define the logger
 
-import logging, xml.dom.minidom
+import logging, StringIO
+from lxml import etree
 
 class UnknownWordException(Exception):
   def __init__(self, value):
@@ -15,20 +16,33 @@ if __name__!="__main__":
 
 class CustomDictionary(object):
   __custom_dictionary_file = "test-customdictionary"
-  __custom_dictionary_dom = None
+  __root = None
   
-  __unknown_words_dom = None
+  __known_words_entries = None
+  __ignored_words_entries = None
+  __unknown_words_entries = None
   
   __known_words = {}
-  __ignored_words = []
-  __unknown_words = []
   
   def __init__(self):
     try:
-      self.__custom_dictionary_dom = xml.dom.minidom.parse(self.__custom_dictionary_file)
+      self.__root = etree.parse(StringIO.StringIO( open(self.__custom_dictionary_file, "r").read())).getroot()
+      
     except IOError as e:
       logger.critical("Failed to open custom dictionary file.")
-      exit(2)    
+      exit(2)
+      
+    self.__known_words_entries = self.__root.find("knownwords").find("entries") 
+    self.__ignored_words_entries = self.__root.find("ignoredwords").find("entries") 
+    self.__unknown_words_entries = self.__root.find("unknownwords").find("entries") 
+    
+    for entry in self.__known_words_entries:
+      self.__known_words[entry.find("word").text] = int(entry.find("syllables").text)
+      
+    print self.__known_words  
+    #self.__known_words 
+    
+    """
     try:
       main_dom = self.__custom_dictionary_dom.getElementsByTagName("customdictionary")[0]
       self.__unknown_words_dom = main_dom.getElementsByTagName("unknownwords")[0].getElementsByTagName("entries")[0]
@@ -54,10 +68,10 @@ class CustomDictionary(object):
     print self.__known_words
     print self.__ignored_words
     print self.__unknown_words
-    
-  def __del__(self):
-    self.__custom_dictionary_dom.writexml(open(self.__custom_dictionary_file, "w"))
-
+    """
+  #def __del__(self): 
+    #self.__custom_dictionary_dom.writexml(open(self.__custom_dictionary_file, "w"))
+  """
   def get_nsyl(self, word):
     word = word.lower()
     try:
@@ -69,15 +83,15 @@ class CustomDictionary(object):
         self.__unknown_words_dom.appendChild(new_dom_element)
         new_dom_element.appendChild(self.__custom_dictionary_dom.createTextNode(word))
       raise UnknownWordException(word);
-    
+"""  
 if __name__=="__main__":
   import arxivhaikulogger
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
   logger.info("Running customDictionary (new testing one) with __name__==__main__")
   
   custom_dictionary = CustomDictionary()
-  try:
+  """try:
     custom_dictionary.get_nsyl("homology")
   except UnknownWordException as e:
     print "Unknown word!"
-  custom_dictionary.__del__()
+  custom_dictionary.__del__()"""
