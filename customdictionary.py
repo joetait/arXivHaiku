@@ -19,6 +19,7 @@ class CustomDictionary(object):
   def __init__(self):
     object.__init__(self)
     self.__mypickle = pickle #keep a ref for this to use in del, otherwise pickle is deleted too sooon
+    self.logger = logger # as above
     logger.info("Initialising customDictionary")
     try:
       dictionary_file = open("customdictionary", "r")
@@ -54,21 +55,33 @@ class CustomDictionary(object):
       
   def __del__(self):
     try:
-      
       dictionary_file = open("customdictionary", "w")
       self.__mypickle.dump(self.__dictionary, dictionary_file)
       dictionary_file.close()
-      
+      self.logger.info("Successfully saved customdictionary")
+    
+    except IOError as e:
+      print ("Failed to save customdictionary: " + str(e))
+      self.logger.critical("Failed to save customdictionary:  " + str(e))
+    
+    try:
       unknownwords_file = open("unknownwords", "w")
       self.__mypickle.dump(self.__unknown_words, unknownwords_file)
       unknownwords_file.close()
+      self.logger.info("Successfully saved unknownwords")
+    except IOError as e:
+      print ("Failed to save unknownwords: " + str(e))
+      self.logger.critical("Failed to save unknownwords:  " + str(e))
       
+    try:  
       ignored_words_file = open("ignoredwords", "w")
       self.__mypickle.dump(self.__ignored_words, ignored_words_file)
       ignored_words_file.close()
+      self.logger.info("Successfully saved ignoredwords")
     except IOError as e:
-      print ("Failed to save to dictionary file: " + str(e))
-     
+      print ("Failed to save ignoredwords: " + str(e))
+      self.logger.critical("Failed to save ignoredwords:  " + str(e))
+      
   def get_nsyl(self, word):
     word = word.lower()
     try:
@@ -80,7 +93,7 @@ class CustomDictionary(object):
 
   def sort_out_unknown_words(self):
     print "Sorting unknown words!"
-    logger.info("customDiction is sorting unknown words")
+    logger.info("customDictionary is sorting unknown words")
     print self.__unknown_words
     for word in self.__unknown_words:
       if word in self.__ignored_words or word in self.__dictionary:
