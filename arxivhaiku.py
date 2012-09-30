@@ -10,7 +10,7 @@
 
 #TODO: Add check for previously parsed files, etc
 
-import logging
+import arxivhaikulogger
 
 def setup_custom_logger(name):
     #formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')

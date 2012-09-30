@@ -8,16 +8,12 @@ d = cmudict.dict()
 from  customdictionary import CustomDictionary, UnknownWordException
 custom_dictionary = CustomDictionary()
 
-logger = logging.getLogger('mainLogger')
-log = logger.debug
+#If __name__=="__main__" then we will define the logger
+#logger = None
+if __name__!="__main__":
+  global logger
+  logger = logging.getLogger('mainLogger')
 
-#TODO Check how it behaves with "-" used as a punctuation seperator..
-
-global debug_enabled
-debug_enabled = False
-
-def debug(string): 
-  if debug_enabled: print string  
 
 #This class runs untex in a seperate thread with specified timeout - prevents untex from hanging entire program
 # initialise with no arguments and then run_untex(raw_tex) returns either untexified tex or an empty string on failure
@@ -33,7 +29,7 @@ class UntexThreadClass(object):
     #Kill everything if we don't have untex available
     if not os.path.isfile("/usr/bin/untex"):
       print "untex doesn't exist, failing (exit(1))"
-      log( "untex doesn't exist, failing (exit(1))")
+      logger.critical( "untex doesn't exist, failing (exit(1))")
       exit(1) #Generic error code
     
   def run_untex(self, raw_tex):
@@ -95,7 +91,7 @@ def find_haiku_in_blocks(blocks):
 	data.append((sum([ nsyl(word) for word in block.split()]), block, ending_punctuation) )
 	#debug("Appending data:" + str ((sum(nsylBlock(block)), block))  + "\n----------------------------------------------\n\n")    
       except UnknownWordException as e:  #Recurse if problem found
-	#log("Unknown word found: " + e.word)
+	logger.debug("Unknown word found: " + e.word)
 	if blocks[0:i]: 
 	  haiku_found += find_haiku_in_blocks(blocks[0:i])
 	if blocks[i+1:]: 
@@ -124,29 +120,15 @@ def find_haiku_in_tex(raw_tex):
   raw_text = untex_thread_class.run_untex(raw_tex)
   return find_haiku_in_text(raw_text)
 
-def usage():  print "Usage: --input\t<INPUT FILE>\n\t-d\tdebug mode"  
+def usage():  print "Usage: --input\t<INPUT FILE>\n\nlogs to arXivHaiku.log"  
   
 if __name__=="__main__":  
-  def setup_custom_logger(name):
-    #formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
-    formatter = logging.Formatter(fmt='%(asctime)s - %(module)s - %(message)s')
-    handler = logging.FileHandler("arXivHaiku.log")
-    handler.setFormatter(formatter)
-    
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    return logger
-    
-  logger = setup_custom_logger('mainLogger')
-  global log
-  log = logger.debug
-  log("Running findHaiku with __name__==__main__")
+  import arxivhaikulogger
+  logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
+  logger.info("Running findHaiku with __name__==__main__")
 
-  global debug_enabled
-  debug_enabled = False
   try:
-    opts, args = getopt.getopt(sys.argv[1:], ":d", ["input="])
+    opts, args = getopt.getopt(sys.argv[1:], "", ["input="])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
     usage()
@@ -155,23 +137,25 @@ if __name__=="__main__":
   for o, a in opts:
     if o == "--input":
       input_file = a
-    elif o == "-d":    
-      debug_enabled = True
     else:
       print "Unhandled Option\n"
+      logger.critical("Unhandled Option")
       usage()
       sys.exit(2)
   if not input_file:
     print "No input file set, use --input option."
+    logger.critical("No input file set")
     sys.exit(2)
       
   try:
     raw_tex = open(input_file, "r").read()
   except IOError as e:
     print "Can't find input file.\n"
+    logger.critical("Can't find input file")
     sys.exit(2)
   
-  haiku_list = find_haiku_in_tex(raw_tex)  
+  haiku_list = find_haiku_in_tex(raw_tex) 
+  logger.info("Found the following haiku: " + str(haiku_list))
   if len(haiku_list)==0:
     print "Found no Haiku, sorry :("
   else:
