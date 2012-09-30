@@ -21,13 +21,12 @@ def rssparse(feed_name):
 #Returns tuple (article_id, raw_tex) or False on failure, raw_tex is UTF8, article_id is xxxx.xxxx format
 def parse_entry(entry):
     
-    #Since this stuff is crucial, use utf8 ENCODE so as to catch ANY problems.  Rest uses decode with ignore.
-    #TODO: Check that this encoding stuff is done right..
     try:
-      link = entry.link.encode("utf8")
+      link = entry.link.decode("utf8")
       article_id = link[-9:]
-    except UnicodeDecodeError as e:
-      logger.warning("Caught UnicodeDecodeError while decoding article_id: " + str(e))
+    except (UnicodeEncodeError,UnicodeDecodeError) as e:
+      logger.warning("Caught UnicodeEncodeError/UnicodeDecodeError while decoding article_id, failing on this entry:" + str(e))
+      return False
       
     src_link = "http://de.arxiv.org/e-print/"+article_id
     logger.info("Downloading: "+src_link)
@@ -40,16 +39,26 @@ def parse_entry(entry):
 	for tarinfo in tar:
 	  if tarinfo.isreg() and tarinfo.name[-3:] == "tex":
 	    logger.info("Extracting: "+tarinfo.name)
-	    raw_tex = tar.extractfile(tarinfo).read().decode("utf8", "ignore")
+	    try:
+	      raw_tex = tar.extractfile(tarinfo).read().decode("utf8", "ignore")
+	    except (UnicodeEncodeError,UnicodeDecodeError) as e:
+	      logger.warning("Caught UnicodeEncodeError/UnicodeDecodeError." \
+	        + "Failing on this entry.  This should never happen!  Error: "  + str(e))
+	      return False
 	    return (article_id, raw_tex)
 	tar.close()
       except IOError as e:
-	logger.warning("Skipping to next entry, got IOError: " + str(e))
+	logger.warning("Got IOError, failing on this entry.  Error: " + str(e))
 	return False
     elif content_type ==  "application/x-eprint" and content_encoding == "x-gzip":
       logger.info("Recieved: application/x-eprint encoded with x-gzip, unpacking")
-      raw_tex = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(open(filename).read())).read()
-      return (article_id, raw_tex.decode("utf8", "ignore"))
+      try:
+        raw_tex = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(open(filename).read())).read().decode("utf8", "ignore")
+      except (UnicodeEncodeError,UnicodeDecodeError) as e:
+	logger.warning("Caught UnicodeEncodeError/UnicodeDecodeError." \
+	        + "Failing on this entry.  This should never happen!  Error: "  + str(e))
+	return False
+      return (article_id, raw_tex)	
     else:
       logger.warning("Recieved Content Type: " + str(content_type) + "\n With Encoding: " + str(content_encoding) + "\n Don't know what to do with this! Skipping to next entry\n\n")
       return False

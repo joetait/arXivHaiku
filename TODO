@@ -1,5 +1,4 @@
 TODO:
-Check encode/decode stuff
 what if multiple tex files sent? - Maybe just string them together!
 integrate properly with twitter
 Check how it behaves with "-" used as a punctuation seperator..
