@@ -55,7 +55,7 @@ def parse_entry(entry):
       raw_tex = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(open(filename).read())).read()
       return (article_id, raw_tex.decode("utf8", "ignore"))
     else:
-      logger.warning("Recieved Content Type: " + content_type + "\n With Encoding: " + content_encoding + "\n Don't know what to do with this! Skipping to next entry\n\n")
+      logger.warning("Recieved Content Type: " + str(content_type) + "\n With Encoding: " + str(content_encoding) + "\n Don't know what to do with this! Skipping to next entry\n\n")
       return False
 	
 if __name__=="__main__":
