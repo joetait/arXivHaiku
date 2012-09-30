@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os.path, subprocess, StringIO, re, io, getopt, sys
+import os.path, subprocess, StringIO, re, io, getopt, sys, logging
 from curses.ascii import isdigit
 from nltk.corpus import cmudict
 d = cmudict.dict() 
@@ -8,10 +8,13 @@ d = cmudict.dict()
 from  customdictionary import CustomDictionary, UnknownWordException
 custom_dictionary = CustomDictionary()
 
+logger = logging.getLogger('mainLogger')
+log = logger.debug
+
 #TODO Check how it behaves with "-" used as a punctuation seperator..
 
 global debug_enabled
-debug_enabled = True
+debug_enabled = False
 
 def debug(string): 
   if debug_enabled: print string  
@@ -57,7 +60,7 @@ def find_haiku_in_blocks(blocks):
 	data.append((sum([ nsyl(word) for word in block.split()]), block, ending_punctuation) )
 	#debug("Appending data:" + str ((sum(nsylBlock(block)), block))  + "\n----------------------------------------------\n\n")    
       except UnknownWordException as e:  #Recurse if problem found
-	debug("Unknown word found: " + e.word)
+	log("Unknown word found: " + e.word)
 	if blocks[0:i]: 
 	  haiku_found += find_haiku_in_blocks(blocks[0:i])
 	if blocks[i+1:]: 
@@ -84,14 +87,16 @@ def find_haiku_in_text(raw_text):
 def find_haiku_in_tex(raw_tex):
   # PASS DATA THROUGH untex TO GET raw_text from raw_tex
   if not os.path.isfile("/usr/bin/untex"):
-    print "untex doesn't exist, failing"
+    print "untex doesn't exist, failing (exit(1))"
+    log( "untex doesn't exist, failing (exit(1))")
     exit(1) #Generic error code
   try:
     untex_process = subprocess.Popen(["untex","-m" ,"-uascii" ,"-gascii" ,"-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
     raw_text = untex_process.communicate(input=raw_tex.encode("ascii","ignore"))[0]
-    debug("untex successfully replied with: " + raw_text + "\n\n")
+    log("untex successfully replied. ")
   except subprocess.CalledProcessError as e:
-    print "Failed to run untex, subprocess.CalledProcessError: " + str(e)
+    log("Failed to run untex, subprocess.CalledProcessError (returning empty list): " + str(e))
+    return []
   untex_process.stdin.close()
 
   return find_haiku_in_text(raw_text)
@@ -129,8 +134,10 @@ if __name__=="__main__":
   
   haiku_list = find_haiku_in_tex(raw_tex)  
   if len(haiku_list)==0:
-    print "Found no Haiku, sorry :("
+    print "Found no Haiku in " + str(article_id) + ", sorry :("
   else:
-    print "Found the following Haiku:"
+    print "Found the following Haiku in " + str(article_id) + ":"
     for haiku in haiku_list:
       print haiku
+      
+      

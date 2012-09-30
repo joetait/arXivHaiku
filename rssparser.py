@@ -13,7 +13,7 @@ def debug(string):
   
 #Yields tuples from parse_entry
 def rssparse(feed_name="http://export.arxiv.org/rss/math?mirror=edu"):
-  log("Attempting to parse feed: " + feedname)
+  log("Attempting to parse feed: " + feed_name)
   feed = feedparser.parse(feed_name)
   for entry in feed.entries:
     parsed_entry = parse_entry(entry)
