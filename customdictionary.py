@@ -1,8 +1,10 @@
 #!/usr/bin/python
-import  getopt, sys
-import pickle
+import  getopt, sys, pickle, logging
 
 #TODO: deal with unknownwordsbetter
+
+logger = logging.getLogger('mainLogger')
+log = logger.debug
 
 class UnknownWordException(Exception):
   def __init__(self, value):
@@ -15,15 +17,18 @@ class CustomDictionary(object):
   def __init__(self):
     object.__init__(self)
     self.__mypickle = pickle #keep a ref for this to use in del, otherwise pickle is deleted too sooon
+    log("Initialising customDictionary")
     try:
       dictionary_file = open("customdictionary", "r")
       self.__dictionary = pickle.load(dictionary_file)
       dictionary_file.close()
     except IOError as e:
       print "Failed to open/read from dictionary file: " + str(e) + "\nFatal"
+      log("Failed to open/read from dictionary file: " + str(e) + "\nFatal")
       exit(1)
     except EOFError as e:  
       print "Failed to open/read from dictionary file: " + str(e) + "\nFatal"
+      log("Failed to open/read from dictionary file: " + str(e) + "\nFatal")
       exit(1)
       
     try:  
@@ -36,10 +41,12 @@ class CustomDictionary(object):
       unknownwords_file.close()
     except IOError as e:
       print "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank"
+      log( "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank")
       self.__unknown_words = []
       self.__ignored_words = []
     except EOFError as e:
       print "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank"      
+      log( "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank")
       self.__unknown_words = []
       self.__ignored_words = []
       
@@ -91,6 +98,22 @@ class CustomDictionary(object):
     self.__unknown_words = []
     
 if __name__=="__main__":
+  def setup_custom_logger(name):
+    #formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
+    formatter = logging.Formatter(fmt='%(asctime)s - %(module)s - %(message)s')
+    handler = logging.FileHandler("arXivHaiku.log")
+    handler.setFormatter(formatter)
+    
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    return logger
+    
+  logger = setup_custom_logger('mainLogger')
+  global log
+  log = logger.debug
+  log("Running customDictionary with __name__==__main__")
+  
   try:
     opts, args = getopt.getopt(sys.argv[1:], ":tp", [])
   except getopt.GetoptError, err:
