@@ -28,18 +28,22 @@ if __name__=="__main__":
     logger.critical("No input xml set")
     sys.exit(2)
   
-  for (article_id, raw_tex) in rssparse(input_xml):
-    logger.info("Attempting raw tex from article_id: "+ str(article_id))
-    try:
-      haiku_list = find_haiku_in_tex(raw_tex)  
-    except RuntimeError as e:
-      print "OH SHIT.  Caught RuntimeError: " + str(e)
-      logger.warning("Caught RuntimeError: "+ str(e))
-    if len(haiku_list)==0:
-      #print "Found no Haiku in " + str(article_id) + ", sorry :("
-      logger.info("Found no Haiku in article_id: " + str(article_id))
-    else:
-      print "Found the following Haiku in " + str(article_id) + ":"
-      for haiku in haiku_list:
-	print haiku
-      logger.info(str(haiku_list) + "(" + str(article_id) + ")")
+  try:
+    for (article_id, raw_tex) in rssparse(input_xml):
+      logger.info("Attempting raw tex from article_id: "+ str(article_id))
+      try:
+	haiku_list = find_haiku_in_tex(raw_tex)  
+      except RuntimeError as e:
+	print "OH SHIT.  Caught RuntimeError: " + str(e)
+	logger.warning("Caught RuntimeError: "+ str(e))
+      if len(haiku_list)==0:
+	#print "Found no Haiku in " + str(article_id) + ", sorry :("
+	logger.info("Found no Haiku in article_id: " + str(article_id))
+      else:
+	print "Found the following Haiku in " + str(article_id) + ":"
+	for haiku in haiku_list:
+	  print haiku
+	logger.info(str(haiku_list) + "(" + str(article_id) + ")")
+  except KeyboardInterrupt as e:
+    print "Caught KeyboardInterrupt, Terminating"
+    logger.critical("Caught KeyboardInterrupt, Terminating")    

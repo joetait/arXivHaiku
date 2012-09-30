@@ -1,23 +1,11 @@
 TODO:
-have logger subclasses automatically by each module
-break out log into log.py, have each log to their own file when __name__==__main__
 Check encode/decode stuff
 aynschronous input 
-merge all debug stuff into log
 logging in shutdown of customDictionary
-fix global problems with logging
-logging properly in findHaiku
-log unknown words etc at lower level
-do log levels properly
 what if multiple tex files sent?
-
-#TODO Check how it behaves with "-" used as a punctuation seperator..
-
-#TODO: Add check for previously parsed files, etc
- check for debug in getopt
-
 integrate with twitter
-
+Check how it behaves with "-" used as a punctuation seperator..
+Add check for previously parsed files, etc
 
 Errors:
 
