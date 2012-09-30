@@ -25,10 +25,9 @@ if __name__=="__main__":
       logger.critical("Unhandled Option")
       sys.exit(2)
   if not input_xml:
-    print "No input xml set, use --input-xml option."
-    logger.critical("No input xml set")
-    sys.exit(2)
-  
+    print "No input xml set, using default: http://export.arxiv.org/rss/math?mirror=edu"
+    input_xml = "http://export.arxiv.org/rss/math?mirror=edu"
+    
   try:
     for (article_id, raw_tex) in rssparse(input_xml):
       logger.info("Attempting raw tex from article_id: "+ str(article_id))

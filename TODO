@@ -1,10 +1,17 @@
 TODO:
 Check encode/decode stuff
-what if multiple tex files sent?
+what if multiple tex files sent? - Maybe just string them together!
 integrate properly with twitter
 Check how it behaves with "-" used as a punctuation seperator..
 Add check for previously parsed files, etc
-dictionary needs a massive overhaul!
+dictionary needs a massive overhaul!  Use XML or similar
+
+Should I use -m in untex? Or add a switch?
+
+Check how it deals with single characters
+
+Errors:
+Many abound - check the logs!
 
 Dictionary error?
 Found the following Haiku in 1209.3215:

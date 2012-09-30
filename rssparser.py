@@ -7,7 +7,7 @@ if __name__!="__main__":
   logger = logging.getLogger('mainLogger')
   
 #Yields tuples from parse_entry
-def rssparse(feed_name="http://export.arxiv.org/rss/math?mirror=edu"):
+def rssparse(feed_name):
   logger.info("Attempting to parse feed: " + feed_name)
   feed = feedparser.parse(feed_name)
   for entry in feed.entries:
@@ -24,11 +24,7 @@ def parse_entry(entry):
     #Since this stuff is crucial, use utf8 ENCODE so as to catch ANY problems.  Rest uses decode with ignore.
     #TODO: Check that this encoding stuff is done right..
     try:
-      #authors = html.document_fromstring(feed.entries[0].author).text_content().encode("utf8").split(",")
-      #authors = ["".join(e for e in y if (e.isalnum() or e == " ")) for y in authors]
       link = entry.link.encode("utf8")
-      #summary = html.document_fromstring(entry.summary.replace("\n", " ")).text_content().encode("utf8")
-      #title = entry.title.encode("utf8")
       article_id = link[-9:]
     except UnicodeDecodeError as e:
       logger.warning("Caught UnicodeDecodeError while decoding article_id: " + str(e))

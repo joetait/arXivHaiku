@@ -34,7 +34,10 @@ class UntexThreadClass(object):
     self.raw_text = ""
     def untex_thread_target(raw_tex):
       logger.info("untex thread started")
-      self.untex_process = subprocess.Popen(["untex","-m" ,"-uascii" ,"-gascii" ,"-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+      
+      #Add -m to remove all math mode stuff below
+      
+      self.untex_process = subprocess.Popen(["untex" ,"-uascii" ,"-gascii" ,"-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
       self.raw_text = self.untex_process.communicate(input=raw_tex.encode("ascii","ignore"))[0]
       self.untex_process.stdin.close()  # TODO: Do I need this?
       logger.info("untex thread finished.")
