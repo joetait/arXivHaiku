@@ -17,3 +17,24 @@ what if multiple tex files sent?
  check for debug in getopt
 
 integrate with twitter
+
+
+Errors:
+
+Found no Haiku in 1209.3243, sorry :(
+Traceback (most recent call last):
+  File "./arxivhaiku.py", line 33, in <module>
+    for (article_id, raw_tex) in rssparse(input_xml):
+  File "/home/simon/Ubuntu One/code/haiku/rssparser.py", line 14, in rssparse
+    parsed_entry = parse_entry(entry)
+  File "/home/simon/Ubuntu One/code/haiku/rssparser.py", line 58, in parse_entry
+    logger.warning("Recieved Content Type: " + content_type + "\n With Encoding: " + content_encoding + "\n Don't know what to do with this! Skipping to next entry\n\n")
+TypeError: cannot concatenate 'str' and 'NoneType' objects
+
+2012-09-30 15:57:35,628 - INFO - arxivhaiku - Found no Haiku in article_id: 1209.3243
+2012-09-30 15:57:35,628 - INFO - rssparser - Downloading: http://de.arxiv.org/e-print/1209.3247
+
+
+
+Found the following Haiku in 1209.3215:
+ maximum at ,  and minimum at . s

@@ -1,9 +1,7 @@
 #!/usr/bin/python
-
 #This is the main program
 
 import arxivhaikulogger, logging
-        
 from twitter import post_status_to_twitter
 from rssparser import rssparse
 from findhaiku import find_haiku_in_tex
@@ -38,10 +36,10 @@ if __name__=="__main__":
       print "OH SHIT.  Caught RuntimeError: " + str(e)
       logger.warning("Caught RuntimeError: "+ str(e))
     if len(haiku_list)==0:
-      print "Found no Haiku in " + str(article_id) + ", sorry :("
+      #print "Found no Haiku in " + str(article_id) + ", sorry :("
       logger.info("Found no Haiku in article_id: " + str(article_id))
     else:
       print "Found the following Haiku in " + str(article_id) + ":"
       for haiku in haiku_list:
 	print haiku
-      logger.info("Found haiku in article_id: " + str(article_id) + " : " + str(haiku_list))
+      logger.info(str(haiku_list) + "(" + str(article_id) + ")")
