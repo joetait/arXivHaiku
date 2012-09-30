@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os.path, subprocess, StringIO, re, io, getopt, sys, logging
+import os.path, subprocess, threading, StringIO, re, io, getopt, sys, logging
 from curses.ascii import isdigit
 from nltk.corpus import cmudict
 d = cmudict.dict() 
@@ -18,6 +18,41 @@ debug_enabled = False
 
 def debug(string): 
   if debug_enabled: print string  
+
+#This class runs untex in a seperate thread with specified timeout - prevents untex from hanging entire program
+# initialise with no arguments and then run_untex(raw_tex) returns either untexified tex or an empty string on failure
+# Only need to initialise once, can then keep calling run
+#Code adapted from http://stackoverflow.com/questions/1191374/subprocess-with-timeout
+class UntexThreadClass(object):
+  __timeout = 5 #default thread timeout of 5 seconds
+  
+  def __init__(self):
+    self.process = None
+    self.raw_text = ""
+    
+    #Kill everything if we don't have untex available
+    if not os.path.isfile("/usr/bin/untex"):
+      print "untex doesn't exist, failing (exit(1))"
+      log( "untex doesn't exist, failing (exit(1))")
+      exit(1) #Generic error code
+    
+  def run_untex(self, raw_tex):
+    self.raw_text = ""
+    def untex_thread_target(raw_tex):
+      print "untex thread started"
+      self.untex_process = subprocess.Popen(["untex","-m" ,"-uascii" ,"-gascii" ,"-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+      self.raw_text = self.untex_process.communicate(input=raw_tex.encode("ascii","ignore"))[0]
+      self.untex_process.stdin.close()  # TODO: Do I need this?
+      print "untex thread finished."
+    
+    untex_thread = threading.Thread(target=untex_thread_target, kwargs={"raw_tex":raw_tex})
+    untex_thread.start()
+    untex_thread.join(self.__timeout)
+    if untex_thread.is_alive():
+      print 'Process timeout, terminating process'
+      self.untex_process.terminate()
+      untex_thread.join()
+    return self.raw_text
 
 def nsyl(word):  #Finds number of syllables in a word
     word = word.lower().strip()
@@ -85,20 +120,8 @@ def find_haiku_in_text(raw_text):
     return haiku_found
       
 def find_haiku_in_tex(raw_tex):
-  # PASS DATA THROUGH untex TO GET raw_text from raw_tex
-  if not os.path.isfile("/usr/bin/untex"):
-    print "untex doesn't exist, failing (exit(1))"
-    log( "untex doesn't exist, failing (exit(1))")
-    exit(1) #Generic error code
-  try:
-    untex_process = subprocess.Popen(["untex","-m" ,"-uascii" ,"-gascii" ,"-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
-    raw_text = untex_process.communicate(input=raw_tex.encode("ascii","ignore"))[0]
-    log("untex successfully replied. ")
-  except subprocess.CalledProcessError as e:
-    log("Failed to run untex, subprocess.CalledProcessError (returning empty list): " + str(e))
-    return []
-  untex_process.stdin.close()
-
+  untex_thread_class = UntexThreadClass()
+  raw_text = untex_thread_class.run_untex(raw_tex)
   return find_haiku_in_text(raw_text)
 
 def usage():  print "Usage: --input\t<INPUT FILE>\n\t-d\tdebug mode"  
@@ -150,10 +173,8 @@ if __name__=="__main__":
   
   haiku_list = find_haiku_in_tex(raw_tex)  
   if len(haiku_list)==0:
-    print "Found no Haiku in " + str(article_id) + ", sorry :("
+    print "Found no Haiku, sorry :("
   else:
-    print "Found the following Haiku in " + str(article_id) + ":"
+    print "Found the following Haiku:"
     for haiku in haiku_list:
       print haiku
-      
-      
