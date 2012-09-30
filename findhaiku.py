@@ -129,6 +129,7 @@ if __name__=="__main__":
     opts, args = getopt.getopt(sys.argv[1:], "", ["input="])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
+    logger.critical("Caught getopt.GetoptError")
     usage()
     sys.exit(2)
   input_file = None

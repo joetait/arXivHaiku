@@ -1,8 +1,6 @@
 #!/usr/bin/python
 import  getopt, sys, pickle, logging
 
-#TODO: deal with unknownwordsbetter
-
 #If __name__=="__main__" then we will define the logger
 if __name__!="__main__":
   global logger
@@ -122,6 +120,7 @@ if __name__=="__main__":
     opts, args = getopt.getopt(sys.argv[1:], ":tp", [])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
+    logger.critical("Caught getopt.GetoptError")
     sys.exit(2)
   input_file = None
   for o, a in opts:
@@ -129,6 +128,7 @@ if __name__=="__main__":
       CustomDictionary().sort_out_unknown_words()
       exit(0)
     elif o == "-t":  #Test!  
+      logger.info("customDictionary is running a test")
       customdictionary = CustomDictionary()
       try:
 	print customdictionary.get_nsyl("bredon")
