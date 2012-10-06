@@ -1,75 +1,73 @@
 #!/usr/bin/python
-#If __name__=="__main__" then we will define the logger
 
-import logging, StringIO, re, pprint, getopt, sys
+import logging, StringIO, re, getopt, sys
 from lxml import etree
 from lxml.builder import E
-
-pp = pprint.PrettyPrinter(indent=2)
 
 class UnknownWordException(Exception):
   def __init__(self, value, conforms_to_xml_requirements):
    self.word = value
    self.conforms_to_xml_requirements = conforms_to_xml_requirements
   def __str__(self):
-    return repr(self.word)
+    return repr(self.word) + "\n Conforms to XML requirements: "+repr(self.conforms_to_xml_requirements)
 
 if __name__!="__main__":
-  global logger
   logger = logging.getLogger('mainLogger')
 
-class CustomDictionary(object):
-  __custom_dictionary_file = "schematest.xml"
-  __root = None
-  
+class CustomDictionary(object): 
   __known_words = None
   __ignored_words = None
   __unknown_words = None
-  
   __xml_schema_word_regex = re.compile(r"^[a-z0-9]+$")
+  __custom_dictionary_schema_file = "customdictionary-schema.xsd"
   
-  def __init__(self):    
+  def __init__(self, custom_dictionary_file):   
+    self.__custom_dictionary_file = custom_dictionary_file
+  
     #--------------------
     #  Import and check against schema
     #--------------------
-    schema_root = StringIO.StringIO(open("customdictionary-schema.xsd").read())
-    schema = etree.XMLSchema(etree.parse(schema_root))
+    try:
+      schema_root = StringIO.StringIO(open(self.__custom_dictionary_schema_file).read())
+    except IOError as e:
+      logger.critical("Failed to open schema file: " + repr(e))
+      exit(1)
+    try:  
+      schema = etree.XMLSchema(etree.parse(schema_root))
+    except etree.XMLSyntaxError as e:
+      logger.critical("Failed to parse XML schema: " + repr(e))
+      exit(1)
+      
     try:
       parser = etree.XMLParser(schema = schema, remove_blank_text=True)
-      self.__root = etree.parse(StringIO.StringIO( open(self.__custom_dictionary_file, "r").read()),parser).getroot()
+      root = etree.parse(StringIO.StringIO( open(self.__custom_dictionary_file, "r").read()),parser).getroot()
     except etree.XMLSyntaxError as e:
-      logger.critical("Failed to parse customdictionary: " + str(e))
+      logger.critical("Failed to parse customdictionary: " + repr(e))
       exit(1)  
       
-    def parse(element):
-      d=[]
-      d.append((element.tag, element.text or map(parse, element.getchildren()) or {}))
-      return d
     try:
-      self.__known_words = self.__root.find("knownwords").find("entries").getchildren()
+      self.__known_words = root.find("knownwords").find("entries").getchildren()
       self.__known_words = dict([(entry.find("word").text, int(entry.find("syllables").text)) for entry in self.__known_words])
-      self.__ignored_words = self.__root.find("ignoredwords").find("entries").getchildren()
+      self.__ignored_words = root.find("ignoredwords").find("entries").getchildren()
       self.__ignored_words = dict([(entry.find("word").text, int(entry.find("count").text)) for entry in self.__ignored_words])
-      self.__unknown_words = self.__root.find("unknownwords").find("entries").getchildren()
+      self.__unknown_words = root.find("unknownwords").find("entries").getchildren()
       self.__unknown_words = dict([(entry.find("word").text, int(entry.find("count").text)) for entry in self.__unknown_words])
     except AttributeError as e:
-      logger.critical("Failed to parse customdictionary: " + str(e) )
-       
+      logger.critical("Failed to parse customdictionary: " + repr(e) )
+      exit(1)
     #--------------------
     #  Check that the same word doesn't appear in >1 list
     #--------------------
-    intersection = set(self.__known_words.keys()).intersection(set(self.__unknown_words.keys()))
-    if intersection:
-      logger.critical("Words appear in both \"known words\" and \"unknown words\": " + str(intersection))
+    def check_for_intersection_in_lists(list1, list2, list1name, list2name):
+      intersection = set(list1).intersection(set(list2))
+      if intersection: logger.critical("Words appear in both \"" + list1name + "\" and \"" + list2name + "\": " + str(intersection))
     
-    intersection = set(self.__unknown_words.keys()).intersection(set(self.__ignored_words.keys()))
-    if intersection:
-      logger.critical("Words appear in both \"unknown words\" and \"ignored words\": " + str(intersection))
-    
-    intersection = set(self.__ignored_words.keys()).intersection(set(self.__known_words.keys()))
-    if intersection:
-      logger.critical("Words appear in both \"ignored words\" and \"known words\": " + str(intersection))
- 
+    for (list1,list2,list1name,list2name) in [   \
+                                      (self.__known_words.keys(), self.__unknown_words.keys(), "known words", "unknown words"),   \
+                                      (self.__unknown_words.keys(), self.__ignored_words.keys(), "unknown words", "ignored words"),   \
+                                      (self.__ignored_words.keys(), self.__known_words.keys(), "ignored words", "known words")]:
+      check_for_intersection_in_lists(list1,list2,list1name,list2name) 
+       
     logger.info("Successfully loaded dictionary files: " + str(len(self.__known_words)) + " elements in known words, " + \
       str(len(self.__unknown_words)) + " elements in unknown words, and " + str(len(self.__ignored_words)) + 
       " elements in ignored words.")
@@ -112,8 +110,6 @@ class CustomDictionary(object):
       raise UnknownWordException(value=word, conforms_to_xml_requirements=True)
   
   def prompt_user_for_new_words(self):
-          
-    print self.__unknown_words.items()
     unknowns = sorted(self.__unknown_words.items(),key=lambda x:-x[1])
     
     for unknown in unknowns:
@@ -133,35 +129,61 @@ class CustomDictionary(object):
 	    success_flag = True
 	  else:
 	    print "Only numbers between 1 and 10 inclusive are valid."
+        
+        if not success_flag:print "Unknown input, repeating."
 
 if __name__=="__main__":
   import arxivhaikulogger
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
   logger.info("Running customDictionary (new testing one) with __name__==__main__")
   
+  custom_dictionary_file = False
+  
   try:
-    opts, args = getopt.getopt(sys.argv[1:],":pt", [])
+    opts, args = getopt.getopt(sys.argv[1:],":pt", ["dictionary-file="])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
     logger.critical("Caught getopt.GetoptError")
     sys.exit(2)
   input_xml = None
   for o, a in opts:
-    if o == "-p":
-      custom_dictionary = CustomDictionary()
-      custom_dictionary.prompt_user_for_new_words()    
-      custom_dictionary.save_dict()
+    if o == "--dictionary-file":
+      custom_dictionary_file = a
+      
+    elif o == "-p":
+      try:
+	logger.info("Running custom dictionary in prompt_user_for_new_words mode")
+	if not custom_dictionary_file:
+	  logger.warning("No dictionary file set, defaulting to schematest.xml")
+	  print "No dictionary file set, defaulting to schematest.xml"
+	  custom_dictionary_file = "schematest.xml"
+	custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file)
+	custom_dictionary.prompt_user_for_new_words()    
+        custom_dictionary.save_dict()	
+
+      except KeyboardInterrupt as e:
+	logger.critical("Caught KeyboardInterrupt, terminating without saving dictionary: " + repr(e))
+	print "Caught KeyboardInterrupt, terminating without saving dictionary: " + repr(e)
+
+      exit(0)
+      
     elif o == "-t":
+      if not custom_dictionary_file:
+	logger.warning("No dictionary file set, defaulting to schematest.xml")
+        print "No dictionary file set, defaulting to schematest.xml"
+        custom_dictionary_file = "schematest.xml"
       #Testing code
       logger.info("Running a test with custom dictionary")
-      custom_dictionary = CustomDictionary()
+      custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file)
       try:
 	custom_dictionary.get_nsyl("snowdens")
       except UnknownWordException as e:
 	print "Unknown word!"
       custom_dictionary.save_dict()
+      
     else:
       print "Unhandled Option\n"
       logger.critical("Unhandled Option")
       sys.exit(2)
-  
+ 
+  print "You need to pass at least one option, -t to test, -p for prompt for user input.  Use --dictionary-file to specify dictionary file."

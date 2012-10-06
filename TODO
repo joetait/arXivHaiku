@@ -11,6 +11,11 @@ Should I use -m in untex? Or add a switch?
 
 Check how it deals with single characters
 
+Stop using exit(1) to terminate on critical errors, have proper fallback
+Check am using __init__ properly instead of __new__
+
+Check all the getopt stuff
+
 Errors:
 Many abound - check the logs!
 
