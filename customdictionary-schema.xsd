@@ -68,7 +68,7 @@
   
   <xsd:simpleType name="wordtype">
     <xsd:restriction base="xsd:string">
-      <xsd:pattern value="[a-z1-9]+"/>
+      <xsd:pattern value="[a-z0-9]+"/>
     </xsd:restriction>
   </xsd:simpleType>
   
