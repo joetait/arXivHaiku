@@ -1,0 +1,88 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+     <xsd:element name="customdictionary">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="knownwords" minOccurs="1" maxOccurs="1" type="knownwordstype"/>
+	    <xsd:element name="unknownwords" minOccurs="1" maxOccurs="1" type="unknownwordstype"/>
+	    <xsd:element name="ignoredwords" minOccurs="1" maxOccurs="1" type="ignoredwordstype"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+  
+  <xsd:complexType name="knownwordstype">
+    <xsd:sequence>
+      <xsd:element name="entries">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="entry" minOccurs="0" maxOccurs="unbounded" type="knownwordsentry"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+   
+  <xsd:complexType name="unknownwordstype">
+    <xsd:sequence>
+      <xsd:element name="entries" minOccurs="1" maxOccurs="1">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="entry" minOccurs="0" maxOccurs="unbounded" type="unknownwordsentry"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+ 
+  <xsd:complexType name="ignoredwordstype">
+    <xsd:sequence>
+      <xsd:element name="entries" minOccurs="1" maxOccurs="1">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="entry" minOccurs="0" maxOccurs="unbounded" type="ignoredwordsentry"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="knownwordsentry">
+    <xsd:sequence>
+      <xsd:element name="word" minOccurs="1" maxOccurs="1" type="wordtype"/>
+      <xsd:element name="syllables" minOccurs="1" maxOccurs="1" type="syllablestype"/>
+    </xsd:sequence>
+  </xsd:complexType>
+ 
+  <xsd:complexType name="unknownwordsentry">
+    <xsd:sequence>
+      <xsd:element name="word" minOccurs="1" maxOccurs="1" type="wordtype"/>
+      <xsd:element name="count" minOccurs="1" maxOccurs="1" type="counttype"/>
+    </xsd:sequence>
+  </xsd:complexType>
+ 
+  <xsd:complexType name="ignoredwordsentry">
+    <xsd:sequence>
+      <xsd:element name="word" minOccurs="1" maxOccurs="1" type="wordtype"/>
+      <xsd:element name="count" minOccurs="1" maxOccurs="1" type="counttype"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:simpleType name="wordtype">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[a-z1-9]+"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  
+  <xsd:simpleType name="counttype">
+    <xsd:restriction base="xsd:integer">
+      <xsd:minInclusive value="1"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="syllablestype">
+    <xsd:restriction base="xsd:integer">
+      <xsd:minInclusive value="1"/>
+      <xsd:maxInclusive value="10"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+</xsd:schema>
