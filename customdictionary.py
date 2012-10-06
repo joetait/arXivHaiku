@@ -21,7 +21,7 @@ class CustomDictionary(object):
   __xml_schema_word_regex = re.compile(r"^[a-z0-9]+$")
   __custom_dictionary_schema_file = "customdictionary-schema.xsd"
   
-  def __init__(self, custom_dictionary_file="schematest.xml"):   
+  def __init__(self, custom_dictionary_file="customdictionary.xml"):   
     self.__custom_dictionary_file = custom_dictionary_file
   
     #--------------------
@@ -154,9 +154,9 @@ if __name__=="__main__":
       try:
 	logger.info("Running custom dictionary in prompt_user_for_new_words mode")
 	if not custom_dictionary_file:
-	  logger.warning("No dictionary file set, defaulting to schematest.xml")
-	  print "No dictionary file set, defaulting to schematest.xml"
-	  custom_dictionary_file = "schematest.xml"
+	  logger.warning("No dictionary file set, defaulting to customdictionary.xml")
+	  print "No dictionary file set, defaulting to customdictionary.xml"
+	  custom_dictionary_file = "customdictionary.xml"
 	custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file)
 	custom_dictionary.prompt_user_for_new_words()    
         custom_dictionary.save_dict()	
@@ -169,9 +169,9 @@ if __name__=="__main__":
       
     elif o == "-t":
       if not custom_dictionary_file:
-	logger.warning("No dictionary file set, defaulting to schematest.xml")
-        print "No dictionary file set, defaulting to schematest.xml"
-        custom_dictionary_file = "schematest.xml"
+	logger.warning("No dictionary file set, defaulting to customdictionary.xml")
+        print "No dictionary file set, defaulting to customdictionary.xml"
+        custom_dictionary_file = "customdictionary.xml"
       #Testing code
       logger.info("Running a test with custom dictionary")
       custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file)
