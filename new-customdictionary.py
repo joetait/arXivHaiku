@@ -3,6 +3,7 @@
 
 import logging, StringIO, re, pprint
 from lxml import etree
+from lxml.builder import E
 
 pp = pprint.PrettyPrinter(indent=2)
 
@@ -73,9 +74,21 @@ class CustomDictionary(object):
       str(len(self.__unknown_words)) + " elements in unknown words, and " + str(len(self.__ignored_words)) + 
       " elements in ignored words.")
   
-  def __del__(self):
-    pass
-  
+  def save_dict(self):
+    knownwords_root = E.knownwords(E.entries( *[E.entry(E.word(word), E.syllables(str(syllables))) \
+                                                for (word, syllables) in self.__known_words.items()] ))
+    unknownwords_root = E.unknownwords(E.entries( *[E.entry(E.word(word), E.count(str(count))) \
+                                                for (word, count) in self.__unknown_words.items()] ))
+    ignoredwords_root = E.ignoredwords(E.entries( *[E.entry(E.word(word), E.count(str(count))) \
+                                                for (word, count) in self.__ignored_words.items()] )) 
+    try:
+      open(self.__custom_dictionary_file, "w").write(etree.tostring(E.customdictionary( \
+				  knownwords_root,unknownwords_root,ignoredwords_root), pretty_print=True))
+    except IOError as e:
+      logger.critical("Failed to save customdictionary to file: " + str(e))
+      
+    logger.info("Successfully saved customdictionary to file")
+    
   def get_nsyl(self, word):
     word = word.lower().strip()
     
@@ -108,4 +121,4 @@ if __name__=="__main__":
     custom_dictionary.get_nsyl("snowdens")
   except UnknownWordException as e:
     print "Unknown word!"
-  custom_dictionary.__del__()
+  custom_dictionary.save_dict()
