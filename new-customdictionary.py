@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #If __name__=="__main__" then we will define the logger
 
-import logging, StringIO, re, pprint
+import logging, StringIO, re, pprint, getopt, sys
 from lxml import etree
 from lxml.builder import E
 
@@ -111,14 +111,57 @@ class CustomDictionary(object):
 	self.__unknown_words[word] = 1
       raise UnknownWordException(value=word, conforms_to_xml_requirements=True)
   
+  def prompt_user_for_new_words(self):
+          
+    print self.__unknown_words.items()
+    unknowns = sorted(self.__unknown_words.items(),key=lambda x:-x[1])
+    
+    for unknown in unknowns:
+      success_flag = False
+      while not success_flag:
+	response = raw_input("How many syllables in: " + unknown[0] + "?  \"p\" for pass (ignore word) and \"q\" to quit").strip()
+	if response=="q":
+	  return
+	elif response=="p":
+	  self.__ignored_words[unknown[0]] = unknown[1]
+	  del self.__unknown_words[unknown[0]]
+	  success_flag = True
+	elif response.isdigit():
+	  if int(response) > 0 and int(response) < 11:
+	    self.__known_words[unknown[0]] = int(response)
+	    del self.__unknown_words[unknown[0]]
+	    success_flag = True
+	  else:
+	    print "Only numbers between 1 and 10 inclusive are valid."
+
 if __name__=="__main__":
   import arxivhaikulogger
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
   logger.info("Running customDictionary (new testing one) with __name__==__main__")
   
-  custom_dictionary = CustomDictionary()
   try:
-    custom_dictionary.get_nsyl("snowdens")
-  except UnknownWordException as e:
-    print "Unknown word!"
-  custom_dictionary.save_dict()
+    opts, args = getopt.getopt(sys.argv[1:],":pt", [])
+  except getopt.GetoptError, err:
+    print str(err) # will print something like "option -a not recognized"
+    logger.critical("Caught getopt.GetoptError")
+    sys.exit(2)
+  input_xml = None
+  for o, a in opts:
+    if o == "-p":
+      custom_dictionary = CustomDictionary()
+      custom_dictionary.prompt_user_for_new_words()    
+      custom_dictionary.save_dict()
+    elif o == "-t":
+      #Testing code
+      logger.info("Running a test with custom dictionary")
+      custom_dictionary = CustomDictionary()
+      try:
+	custom_dictionary.get_nsyl("snowdens")
+      except UnknownWordException as e:
+	print "Unknown word!"
+      custom_dictionary.save_dict()
+    else:
+      print "Unhandled Option\n"
+      logger.critical("Unhandled Option")
+      sys.exit(2)
+  

@@ -1,6 +1,6 @@
 TODO:
 Dictionary Overhaul: Use an XML schema
-
+Make sure to call save_dict
 
 what if multiple tex files sent? - Maybe just string them together!
 integrate properly with twitter
