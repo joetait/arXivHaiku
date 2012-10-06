@@ -1,146 +1,189 @@
 #!/usr/bin/python
-import  getopt, sys, pickle, logging
 
-#If __name__=="__main__" then we will define the logger
-if __name__!="__main__":
-  global logger
-  logger = logging.getLogger('mainLogger')
+import logging, StringIO, re, getopt, sys
+from lxml import etree
+from lxml.builder import E
 
 class UnknownWordException(Exception):
-  def __init__(self, value):
+  def __init__(self, value, conforms_to_xml_requirements):
    self.word = value
+   self.conforms_to_xml_requirements = conforms_to_xml_requirements
   def __str__(self):
-    return repr(self.word)
+    return repr(self.word) + "\n Conforms to XML requirements: "+repr(self.conforms_to_xml_requirements)
 
-class CustomDictionary(object):
+if __name__!="__main__":
+  logger = logging.getLogger('mainLogger')
+
+class CustomDictionary(object): 
+  __known_words = None
+  __ignored_words = None
+  __unknown_words = None
+  __xml_schema_word_regex = re.compile(r"^[a-z0-9]+$")
+  __custom_dictionary_schema_file = "customdictionary-schema.xsd"
   
-  def __init__(self):
-    object.__init__(self)
-    self.__mypickle = pickle #keep a ref for this to use in del, otherwise pickle is deleted too sooon
-    self.logger = logger # as above
-    logger.info("Initialising customDictionary")
+  def __init__(self, custom_dictionary_file):   
+    self.__custom_dictionary_file = custom_dictionary_file
+  
+    #--------------------
+    #  Import and check against schema
+    #--------------------
     try:
-      dictionary_file = open("customdictionary", "r")
-      self.__dictionary = pickle.load(dictionary_file)
-      dictionary_file.close()
+      schema_root = StringIO.StringIO(open(self.__custom_dictionary_schema_file).read())
     except IOError as e:
-      print "Failed to open/read from dictionary file: " + str(e) + "\nFatal"
-      logger.critical("Failed to open/read from dictionary file: " + str(e) + "\nFatal")
+      logger.critical("Failed to open schema file: " + repr(e))
       exit(1)
-    except EOFError as e:  
-      print "Failed to open/read from dictionary file: " + str(e) + "\nFatal"
-      logger.critical("Failed to open/read from dictionary file: " + str(e) + "\nFatal")
+    try:  
+      schema = etree.XMLSchema(etree.parse(schema_root))
+    except etree.XMLSyntaxError as e:
+      logger.critical("Failed to parse XML schema: " + repr(e))
       exit(1)
       
-    try:  
-      ignored_words_file = open("ignoredwords", "r")
-      self.__ignored_words = pickle.load(ignored_words_file)
-      ignored_words_file.close()
-      
-      unknownwords_file = open("unknownwords", "r")
-      self.__unknown_words = pickle.load(unknownwords_file)
-      unknownwords_file.close()
-    except IOError as e:
-      print "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank"
-      logger.warning( "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank")
-      self.__unknown_words = []
-      self.__ignored_words = []
-    except EOFError as e:
-      print "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank"      
-      logger.warning( "Failed to open/read from ignoredwords/unknownwords file: " + str(e) + "\nInitialising blank")
-      self.__unknown_words = []
-      self.__ignored_words = []
-      
-  def __del__(self):
     try:
-      dictionary_file = open("customdictionary", "w")
-      self.__mypickle.dump(self.__dictionary, dictionary_file)
-      dictionary_file.close()
-      self.logger.info("Successfully saved customdictionary")
-    
-    except IOError as e:
-      print ("Failed to save customdictionary: " + str(e))
-      self.logger.critical("Failed to save customdictionary:  " + str(e))
-    
+      parser = etree.XMLParser(schema = schema, remove_blank_text=True)
+      root = etree.parse(StringIO.StringIO( open(self.__custom_dictionary_file, "r").read()),parser).getroot()
+    except etree.XMLSyntaxError as e:
+      logger.critical("Failed to parse customdictionary: " + repr(e))
+      exit(1)  
+      
     try:
-      unknownwords_file = open("unknownwords", "w")
-      self.__mypickle.dump(self.__unknown_words, unknownwords_file)
-      unknownwords_file.close()
-      self.logger.info("Successfully saved unknownwords")
+      self.__known_words = root.find("knownwords").find("entries").getchildren()
+      self.__known_words = dict([(entry.find("word").text, int(entry.find("syllables").text)) for entry in self.__known_words])
+      self.__ignored_words = root.find("ignoredwords").find("entries").getchildren()
+      self.__ignored_words = dict([(entry.find("word").text, int(entry.find("count").text)) for entry in self.__ignored_words])
+      self.__unknown_words = root.find("unknownwords").find("entries").getchildren()
+      self.__unknown_words = dict([(entry.find("word").text, int(entry.find("count").text)) for entry in self.__unknown_words])
+    except AttributeError as e:
+      logger.critical("Failed to parse customdictionary: " + repr(e) )
+      exit(1)
+    #--------------------
+    #  Check that the same word doesn't appear in >1 list
+    #--------------------
+    def check_for_intersection_in_lists(list1, list2, list1name, list2name):
+      intersection = set(list1).intersection(set(list2))
+      if intersection: logger.critical("Words appear in both \"" + list1name + "\" and \"" + list2name + "\": " + str(intersection))
+    
+    for (list1,list2,list1name,list2name) in [   \
+                                      (self.__known_words.keys(), self.__unknown_words.keys(), "known words", "unknown words"),   \
+                                      (self.__unknown_words.keys(), self.__ignored_words.keys(), "unknown words", "ignored words"),   \
+                                      (self.__ignored_words.keys(), self.__known_words.keys(), "ignored words", "known words")]:
+      check_for_intersection_in_lists(list1,list2,list1name,list2name) 
+       
+    logger.info("Successfully loaded dictionary files: " + str(len(self.__known_words)) + " elements in known words, " + \
+      str(len(self.__unknown_words)) + " elements in unknown words, and " + str(len(self.__ignored_words)) + 
+      " elements in ignored words.")
+  
+  def save_dict(self):
+    knownwords_root = E.knownwords(E.entries( *[E.entry(E.word(word), E.syllables(str(syllables))) \
+                                                for (word, syllables) in self.__known_words.items()] ))
+    unknownwords_root = E.unknownwords(E.entries( *[E.entry(E.word(word), E.count(str(count))) \
+                                                for (word, count) in self.__unknown_words.items()] ))
+    ignoredwords_root = E.ignoredwords(E.entries( *[E.entry(E.word(word), E.count(str(count))) \
+                                                for (word, count) in self.__ignored_words.items()] )) 
+    try:
+      open(self.__custom_dictionary_file, "w").write(etree.tostring(E.customdictionary( \
+				  knownwords_root,unknownwords_root,ignoredwords_root), pretty_print=True))
     except IOError as e:
-      print ("Failed to save unknownwords: " + str(e))
-      self.logger.critical("Failed to save unknownwords:  " + str(e))
+      logger.critical("Failed to save customdictionary to file: " + str(e))
       
-    try:  
-      ignored_words_file = open("ignoredwords", "w")
-      self.__mypickle.dump(self.__ignored_words, ignored_words_file)
-      ignored_words_file.close()
-      self.logger.info("Successfully saved ignoredwords")
-    except IOError as e:
-      print ("Failed to save ignoredwords: " + str(e))
-      self.logger.critical("Failed to save ignoredwords:  " + str(e))
-      
+    logger.info("Successfully saved customdictionary to file")
+    
   def get_nsyl(self, word):
-    word = word.lower()
+    word = word.lower().strip()
+    
+    #Check conforms to XML dict requirements
+    if not self.__xml_schema_word_regex.match(word):
+      logger.debug("get_nsyl caught word that doesn't match xml requirements: " + word)
+      raise UnknownWordException(value=word, conforms_to_xml_requirements=False)
+    
     try:
-      return self.__dictionary[word]
+      return self.__known_words[word]
     except KeyError as e:
-      if word not in self.__ignored_words and word not in self.__unknown_words:
-        self.__unknown_words += [word]
-      raise UnknownWordException(word);
-
-  def sort_out_unknown_words(self):
-    print "Sorting unknown words!"
-    logger.info("customDictionary is sorting unknown words")
-    print self.__unknown_words
-    for word in self.__unknown_words:
-      if word in self.__ignored_words or word in self.__dictionary:
-        print "Word in ignored_words or dictionary, this shouldn't happen."
-      
-      #TODO: This is not ideal, shouldn't immediately break, should remove words from unknownwords
-      x = raw_input("x to exit, or how many syllables in " + word + "?")
-      if x == "x":
-	break
-      if (x == "" or (not x.isdigit()) or int(x) < 1 or int(x) > 9):
-        print "Adding word to ignore list - didn't get a number, or got a stupid number"
-        self.__ignored_words += [word]
+      if word in self.__ignored_words:
+	logger.debug("get_nsyl caught word already in ignored words: " + word)
+	self.__ignored_words[word] += 1
+      elif word in self.__unknown_words:
+        logger.debug("get_nsyl caught word already in unknown words: " + word)
+	self.__unknown_words[word] += 1
       else:
-        print "Adding to dictionary: " + word + " - " + x
-        self.__dictionary[word] = int(x)
-        pass
+        logger.debug("get_nsyl caught new unknown word: " + word)
+	self.__unknown_words[word] = 1
+      raise UnknownWordException(value=word, conforms_to_xml_requirements=True)
+  
+  def prompt_user_for_new_words(self):
+    unknowns = sorted(self.__unknown_words.items(),key=lambda x:-x[1])
     
-    self.__unknown_words = []
-    
+    for unknown in unknowns:
+      success_flag = False
+      while not success_flag:
+	response = raw_input("How many syllables in: " + unknown[0] + "?  \"p\" for pass (ignore word) and \"q\" to quit").strip()
+	if response=="q":
+	  return
+	elif response=="p":
+	  self.__ignored_words[unknown[0]] = unknown[1]
+	  del self.__unknown_words[unknown[0]]
+	  success_flag = True
+	elif response.isdigit():
+	  if int(response) > 0 and int(response) < 11:
+	    self.__known_words[unknown[0]] = int(response)
+	    del self.__unknown_words[unknown[0]]
+	    success_flag = True
+	  else:
+	    print "Only numbers between 1 and 10 inclusive are valid."
+        
+        if not success_flag:print "Unknown input, repeating."
+
 if __name__=="__main__":
   import arxivhaikulogger
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
-  logger.info("Running customDictionary with __name__==__main__")
+  logger.info("Running customDictionary (new testing one) with __name__==__main__")
+  
+  custom_dictionary_file = False
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], ":tp", [])
+    opts, args = getopt.getopt(sys.argv[1:],":pt", ["dictionary-file="])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
     logger.critical("Caught getopt.GetoptError")
     sys.exit(2)
-  input_file = None
+  input_xml = None
   for o, a in opts:
-    if o == "-p":
-      CustomDictionary().sort_out_unknown_words()
-      exit(0)
-    elif o == "-t":  #Test!  
-      logger.info("customDictionary is running a test")
-      customdictionary = CustomDictionary()
+    if o == "--dictionary-file":
+      custom_dictionary_file = a
+      
+    elif o == "-p":
       try:
-	print customdictionary.get_nsyl("bredon")
-	print customdictionary.get_nsyl("bredons")
-      except UnknownWordException as e:
-	print "Unknown Word: " + str(e)
+	logger.info("Running custom dictionary in prompt_user_for_new_words mode")
+	if not custom_dictionary_file:
+	  logger.warning("No dictionary file set, defaulting to schematest.xml")
+	  print "No dictionary file set, defaulting to schematest.xml"
+	  custom_dictionary_file = "schematest.xml"
+	custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file)
+	custom_dictionary.prompt_user_for_new_words()    
+        custom_dictionary.save_dict()	
+
+      except KeyboardInterrupt as e:
+	logger.critical("Caught KeyboardInterrupt, terminating without saving dictionary: " + repr(e))
+	print "Caught KeyboardInterrupt, terminating without saving dictionary: " + repr(e)
+
       exit(0)
+      
+    elif o == "-t":
+      if not custom_dictionary_file:
+	logger.warning("No dictionary file set, defaulting to schematest.xml")
+        print "No dictionary file set, defaulting to schematest.xml"
+        custom_dictionary_file = "schematest.xml"
+      #Testing code
+      logger.info("Running a test with custom dictionary")
+      custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file)
+      try:
+	custom_dictionary.get_nsyl("snowdens")
+      except UnknownWordException as e:
+	print "Unknown word!"
+      custom_dictionary.save_dict()
+      
     else:
       print "Unhandled Option\n"
-      logger.critical("Unhandled option")
+      logger.critical("Unhandled Option")
       sys.exit(2)
-  if not input_file:
-    print "No input file set, use --input option."
-    logger.critical("No input file set")
-    sys.exit(2)
+ 
+  print "You need to pass at least one option, -t to test, -p for prompt for user input.  Use --dictionary-file to specify dictionary file."
