@@ -6,7 +6,7 @@ from nltk.corpus import cmudict
 d = cmudict.dict() 
 
 from  customdictionary import CustomDictionary, UnknownWordException
-custom_dictionary = CustomDictionary()
+custom_dictionary = None
 
 #If __name__=="__main__" then we will define the logger
 if __name__!="__main__":
@@ -117,9 +117,13 @@ def find_haiku_in_text(raw_text):
     return haiku_found
       
 def find_haiku_in_tex(raw_tex):
+  global custom_dictionary
+  custom_dictionary = CustomDictionary()
   untex_thread_class = UntexThreadClass()
   raw_text = untex_thread_class.run_untex(raw_tex)
-  return find_haiku_in_text(raw_text)
+  haiku_found = find_haiku_in_text(raw_text)
+  custom_dictionary.save_dict()
+  return haiku_found
 
 def usage():  print "Usage: --input\t<INPUT FILE>\n\nlogs to arXivHaiku.log"  
   

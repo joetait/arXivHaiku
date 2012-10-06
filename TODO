@@ -1,6 +1,7 @@
 TODO:
 Dictionary Overhaul: Use an XML schema
 Make sure to call save_dict
+Use of custom_dictionary not ideal in findhaiku!
 
 what if multiple tex files sent? - Maybe just string them together!
 integrate properly with twitter
@@ -12,7 +13,8 @@ Should I use -m in untex? Or add a switch?
 Check how it deals with single characters
 
 Stop using exit(1) to terminate on critical errors, have proper fallback
-Check am using __init__ properly instead of __new__
+Check am using __init__ properly instead of __new__, also should probably save with a destructor, or something like that
+
 
 Check all the getopt stuff
 

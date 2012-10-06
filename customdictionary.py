@@ -21,7 +21,7 @@ class CustomDictionary(object):
   __xml_schema_word_regex = re.compile(r"^[a-z0-9]+$")
   __custom_dictionary_schema_file = "customdictionary-schema.xsd"
   
-  def __init__(self, custom_dictionary_file):   
+  def __init__(self, custom_dictionary_file="schematest.xml"):   
     self.__custom_dictionary_file = custom_dictionary_file
   
     #--------------------
