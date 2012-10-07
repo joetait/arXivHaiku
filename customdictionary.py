@@ -33,7 +33,7 @@ def usage():
   -p \t Prompt user to enter new words into dictionary
   -t \t Run some basic tests
   
-  --dictionary-file and --no-dictionary-update option must be given before -p or -t
+  Using -p and -t together is not valid
   """
 
 import logging, StringIO, re, getopt, sys
@@ -182,6 +182,8 @@ if __name__=="__main__":
   
   custom_dictionary_file = False
   no_dictionary_update = False
+  mode_prompt = False
+  mode_test = False
   
   try:
     opts, args = getopt.getopt(sys.argv[1:],":pt", ["no-dictionary-update", "dictionary-file=", \
@@ -204,46 +206,48 @@ if __name__=="__main__":
       logger.setLevel(logging.DEBUG)
     elif o == "--no-dictionary-update":
       no_dictionary_update = True
-    
     elif o == "--dictionary-file":
       custom_dictionary_file = a
-      
     elif o == "-p":
-      try:
-	logger.info("Running custom dictionary in prompt_user_for_new_words mode")
-	if not custom_dictionary_file:
-	  logger.warning("No dictionary file set, defaulting to customdictionary.xml")
-	  print "No dictionary file set, defaulting to customdictionary.xml"
-	  custom_dictionary_file = "customdictionary.xml"
-	custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file, no_dictionary_update=no_dictionary_update)
-	custom_dictionary.prompt_user_for_new_words()    
-        custom_dictionary.save_dict()	
-
-      except KeyboardInterrupt as e:
-	logger.critical("Caught KeyboardInterrupt, terminating without saving dictionary: " + repr(e))
-	print "Caught KeyboardInterrupt, terminating without saving dictionary: " + repr(e)
-
-      exit(0)
-      
+      mode_prompt = True
     elif o == "-t":
-      if not custom_dictionary_file:
-	logger.warning("No dictionary file set, defaulting to customdictionary.xml")
-        print "No dictionary file set, defaulting to customdictionary.xml"
-        custom_dictionary_file = "customdictionary.xml"
-      #Testing code
-      logger.info("Running a test with custom dictionary")
-      custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file,no_dictionary_update=no_dictionary_update)
-      try:
-	custom_dictionary.get_nsyl("homomorphism")
-      except UnknownWordException as e:
-	print "Unknown word!"
-      custom_dictionary.save_dict()
-      exit(0)
-      
+      mode_test = True
     else:
       print "Unhandled Option.\n"
       usage()
       logger.critical("Unhandled Option")
       sys.exit(2)
  
-  usage()
+  if (not mode_prompt and not mode_test) or (mode_prompt and mode_test):
+    usage()
+    exit(1) 
+  
+  if mode_test:
+    if not custom_dictionary_file:
+      logger.warning("No dictionary file set, defaulting to customdictionary.xml")
+      print "No dictionary file set, defaulting to customdictionary.xml"
+      custom_dictionary_file = "customdictionary.xml"
+    #Testing code
+    logger.info("Running a test with custom dictionary")
+    custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file,no_dictionary_update=no_dictionary_update)
+    try:
+      custom_dictionary.get_nsyl("homomorphism")
+    except UnknownWordException as e:
+      print "Unknown word!"
+    custom_dictionary.save_dict()
+    exit(0)
+
+  if mode_prompt:
+    try:
+      logger.info("Running custom dictionary in prompt_user_for_new_words mode")
+      if not custom_dictionary_file:
+        logger.warning("No dictionary file set, defaulting to customdictionary.xml")
+        print "No dictionary file set, defaulting to customdictionary.xml"
+	custom_dictionary_file = "customdictionary.xml"
+      custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file, no_dictionary_update=no_dictionary_update)
+      custom_dictionary.prompt_user_for_new_words()    
+      custom_dictionary.save_dict()	
+
+    except KeyboardInterrupt as e:
+      logger.critical("Caught KeyboardInterrupt, terminating without saving dictionary: " + repr(e))
+      print "Caught KeyboardInterrupt, terminating without saving dictionary: " + repr(e)
