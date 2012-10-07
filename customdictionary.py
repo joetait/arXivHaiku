@@ -156,7 +156,7 @@ class CustomDictionary(object):
       success_flag = False
       while not success_flag:
 	response = raw_input(unknown[0] + " has count " + str(unknown[1]) + " how many syllables?  " + \
-	                                  "Type \"p\" for pass (ignore word) and \"q\" to quit").strip()
+	                                  "Type \"p\" for pass (ignore word) and \"q\" to quit: ").strip()
 	if response=="q":
 	  return
 	elif response=="p":
