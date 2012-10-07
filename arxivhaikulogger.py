@@ -19,15 +19,15 @@
 
 import logging
 
-def setup_custom_logger(name, log_file_name="arXivHaiku.log"):
-    DEFAULT_LOG_LEVEL = logging.INFO #Change to debug for more messages
+def setup_custom_logger(name, log_file_name="arXivHaiku.log", default_log_level=logging.INFO ):
+    default_log_level = default_log_level
   
     formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
     handler = logging.FileHandler(log_file_name)
     handler.setFormatter(formatter)
     
     logger = logging.getLogger(name)
-    logger.setLevel(DEFAULT_LOG_LEVEL)
+    logger.setLevel(default_log_level)
     logger.addHandler(handler)
     return logger
 

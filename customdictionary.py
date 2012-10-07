@@ -152,6 +152,7 @@ class CustomDictionary(object):
     unknowns = sorted(self.__unknown_words.items(),key=lambda x:-x[1])
     
     for unknown in unknowns:
+      logger.debug("Prompting for " + repr(unknown))
       success_flag = False
       while not success_flag:
 	response = raw_input(unknown[0] + " has count " + str(unknown[1]) + " how many syllables?  " + \
@@ -183,7 +184,9 @@ if __name__=="__main__":
   no_dictionary_update = False
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:],":pt", ["no-dictionary-update", "dictionary-file="])
+    opts, args = getopt.getopt(sys.argv[1:],":pt", ["no-dictionary-update", "dictionary-file=", \
+                                                 "log-level-critical", "log-level-warning", \
+                                                 "log-level-info", "log-level-debug" ])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
     usage()
@@ -191,7 +194,15 @@ if __name__=="__main__":
     sys.exit(2)
   input_xml = None
   for o, a in opts:
-    if o == "--no-dictionary-update":
+    if o == "--log-level-critical":
+      logger.setLevel(logging.CRITICAL)
+    elif o == "--log-level-warning":
+      logger.setLevel(logging.WARNING)
+    elif o == "--log-level-info":
+      logger.setLevel(logging.INFO)
+    elif o == "--log-level-debug":
+      logger.setLevel(logging.DEBUG)
+    elif o == "--no-dictionary-update":
       no_dictionary_update = True
     
     elif o == "--dictionary-file":
