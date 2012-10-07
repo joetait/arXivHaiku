@@ -1,5 +1,4 @@
 TODO:
-Add ability to change debug level in all getopts
 
 Make sure to call save_dict
 Use of custom_dictionary not ideal in findhaiku!
