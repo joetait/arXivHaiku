@@ -63,7 +63,6 @@ class HaikuFindingThread(threading.Thread):
 	except RuntimeError as e:
 	  logger.warning("Caught RuntimeError: "+ str(e))
 	if len(haiku_list)==0:
-	  self.results_queue.put(" This is a fakehaiku, blh blah blah test " + " (" + str(article_id) + ") #arXivHaiku")
 	  logger.info("Found no Haiku in article_id: " + str(article_id))
 	else:
 	  for haiku in haiku_list:
