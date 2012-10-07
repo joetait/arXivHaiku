@@ -17,6 +17,21 @@
 #You should have received a copy of the GNU General Public License
 #along with arXivHaiku.  If not, see <http://www.gnu.org/licenses/>.
 
+def printlicense():
+  print """
+  findhaiku is part of arXivHaiku  Copyright 2012 Simon StJohn-Green
+    This program comes with ABSOLUTELY NO WARRANTY; for details see gpl.txt
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; see gpl.txt for details.
+  """       
+        
+def usage():
+  print """
+  Usage: 
+  --no-dictionary-update \t Don't add new unknown words or increment unknown/ignored words count
+  --input= \t tex file to search for haiku in
+  """
+
 import os.path, subprocess, threading, StringIO, re, io, getopt, sys, logging
 from curses.ascii import isdigit
 from nltk.corpus import cmudict
@@ -141,10 +156,9 @@ def find_haiku_in_tex(raw_tex, no_dictionary_update):
   haiku_found = find_haiku_in_text(raw_text)
   custom_dictionary.save_dict()
   return haiku_found
-
-def usage():  print "Usage: --input\t<INPUT FILE>\n\nlogs to arXivHaiku.log"  
   
 if __name__=="__main__":  
+  printlicense()
   import arxivhaikulogger
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
   logger.info("Running findHaiku with __name__==__main__")
@@ -169,6 +183,7 @@ if __name__=="__main__":
       sys.exit(2)
   if not input_file:
     print "No input file set, use --input option."
+    usage()
     logger.critical("No input file set")
     sys.exit(2)
       

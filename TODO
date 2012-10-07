@@ -4,9 +4,6 @@ Add ability to change debug level in all getopts
 Make sure to call save_dict
 Use of custom_dictionary not ideal in findhaiku!
 
-In customdictionary - say what the count is when prompting
-- include option not to accumulate the count - useful when running against something multiple times
-
 what if multiple tex files sent? - Maybe just string them together!
 integrate properly with twitter
 Check how it behaves with "-" used as a punctuation seperator..

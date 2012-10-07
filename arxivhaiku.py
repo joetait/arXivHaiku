@@ -17,6 +17,21 @@
 #You should have received a copy of the GNU General Public License
 #along with arXivHaiku.  If not, see <http://www.gnu.org/licenses/>.
 
+def printlicense():
+  print """
+  arXivHaiku  Copyright 2012 Simon StJohn-Green
+    This program comes with ABSOLUTELY NO WARRANTY; for details see gpl.txt
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; see gpl.txt for details.
+  """       
+        
+def usage():
+  print """
+  Usage: 
+  --no-dictionary-update \t Don't add new unknown words or increment unknown/ignored words count
+  --input-xml= \t xml file from the arXiv to pull tex files from, defaults to http://export.arxiv.org/rss/math?mirror=edu
+  """
+
 import arxivhaikulogger, logging
 from twitter import post_status_to_twitter
 from rssparser import rssparse
@@ -24,6 +39,8 @@ from findhaiku import find_haiku_in_tex
 import getopt,sys
 
 if __name__=="__main__":  
+  printlicense()
+
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')
   logger.info("Running arXivHaiku with __name__==__main__")
   

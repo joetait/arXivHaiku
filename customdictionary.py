@@ -19,7 +19,7 @@
 
 def printlicense():
   print """
-  arXivHaiku  Copyright 2012 Simon StJohn-Green
+  customdictionary is part of arXivHaiku  Copyright 2012 Simon StJohn-Green
     This program comes with ABSOLUTELY NO WARRANTY; for details see gpl.txt
     This is free software, and you are welcome to redistribute it
     under certain conditions; see gpl.txt for details.
