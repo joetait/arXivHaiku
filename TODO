@@ -29,10 +29,3 @@ Recursion errors abound, maybe check lengths of things before splitting again an
 Dictionary error?
 Found the following Haiku in 1209.3215:
  maximum at ,  and minimum at . s
-
-Have it print out 
- <program>  Copyright (C) <year>  <name of author>
-    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
-    This is free software, and you are welcome to redistribute it
-    under certain conditions; type `show c' for details.
-at the beginning of everything, as per GPL website instructions
