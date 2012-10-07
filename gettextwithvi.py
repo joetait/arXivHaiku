@@ -19,7 +19,7 @@
 
 import os, tempfile
 
-def get_text(editable_text, displayed_text=""):
+def get_text_with_vi(editable_text, displayed_text=""):
   (handle, filename) = tempfile.mkstemp()
   os.close(handle)
   open(filename, "w").write(editable_text+"\n"+displayed_text)
@@ -29,4 +29,4 @@ def get_text(editable_text, displayed_text=""):
   return text.strip()  #Need strip to remove 
 
 if __name__=="__main__":
-  print get_text("This is a test run", "This should be underneath")
+  print get_text_with_vi("This is a test run", "This should be underneath")
