@@ -21,7 +21,9 @@ Check am using __init__ properly instead of __new__, also should probably save w
 
 Add vi addon
 
-Check all the getopt stuff, really not dont properly atm
+Check all the getopt stuff, really not dont properly atm 
+  - Should be able to give options in any order etc, 
+  - setting -t and -p should be illegal in customdictionary
 
 Errors:
 Many abound - check the logs!

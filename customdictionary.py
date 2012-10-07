@@ -29,10 +29,11 @@ def usage():
   print """
   Usage: 
   --dictionary-file \t Use custom dictionary file, this option defaults to customdictionary.xml
+  --no-dictionary-update \t Don't add new unknown words or increment unknown/ignored words count
   -p \t Prompt user to enter new words into dictionary
   -t \t Run some basic tests
   
-  --dictionary-file option must be given before -p or -t
+  --dictionary-file and --no-dictionary-update option must be given before -p or -t
   """
 
 import logging, StringIO, re, getopt, sys
@@ -56,9 +57,12 @@ class CustomDictionary(object):
   __xml_schema_word_regex = re.compile(r"^[a-z0-9]+$")
   __custom_dictionary_schema_file = "customdictionary-schema.xsd"
   
-  def __init__(self, custom_dictionary_file="customdictionary.xml"):   
-    self.__custom_dictionary_file = custom_dictionary_file
+  #If set to true then counts for unknown/ignored words won't be incremented and new unknown words won't be added
+  __no_dictionary_update = False
   
+  def __init__(self, custom_dictionary_file="customdictionary.xml", no_dictionary_update = False):   
+    self.__custom_dictionary_file = custom_dictionary_file
+    self.__no_dictionary_update = no_dictionary_update
     #--------------------
     #  Import and check against schema
     #--------------------
@@ -135,13 +139,13 @@ class CustomDictionary(object):
     except KeyError as e:
       if word in self.__ignored_words:
 	logger.debug("get_nsyl caught word already in ignored words: " + word)
-	self.__ignored_words[word] += 1
+	if not self.__no_dictionary_update: self.__ignored_words[word] += 1
       elif word in self.__unknown_words:
         logger.debug("get_nsyl caught word already in unknown words: " + word)
-	self.__unknown_words[word] += 1
+	if not self.__no_dictionary_update: self.__unknown_words[word] += 1
       else:
         logger.debug("get_nsyl caught new unknown word: " + word)
-	self.__unknown_words[word] = 1
+	if not self.__no_dictionary_update: self.__unknown_words[word] = 1
       raise UnknownWordException(value=word, conforms_to_xml_requirements=True)
   
   def prompt_user_for_new_words(self):
@@ -176,10 +180,10 @@ if __name__=="__main__":
   logger.info("Running customDictionary (new testing one) with __name__==__main__")
   
   custom_dictionary_file = False
-  no_counting = False
+  no_dictionary_update = False
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:],":pt", ["dictionary-file="])
+    opts, args = getopt.getopt(sys.argv[1:],":pt", ["no-dictionary-update", "dictionary-file="])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
     usage()
@@ -187,7 +191,10 @@ if __name__=="__main__":
     sys.exit(2)
   input_xml = None
   for o, a in opts:
-    if o == "--dictionary-file":
+    if o == "--no-dictionary-update":
+      no_dictionary_update = True
+    
+    elif o == "--dictionary-file":
       custom_dictionary_file = a
       
     elif o == "-p":
@@ -197,7 +204,7 @@ if __name__=="__main__":
 	  logger.warning("No dictionary file set, defaulting to customdictionary.xml")
 	  print "No dictionary file set, defaulting to customdictionary.xml"
 	  custom_dictionary_file = "customdictionary.xml"
-	custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file)
+	custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file, no_dictionary_update=no_dictionary_update)
 	custom_dictionary.prompt_user_for_new_words()    
         custom_dictionary.save_dict()	
 
@@ -214,12 +221,13 @@ if __name__=="__main__":
         custom_dictionary_file = "customdictionary.xml"
       #Testing code
       logger.info("Running a test with custom dictionary")
-      custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file)
+      custom_dictionary = CustomDictionary(custom_dictionary_file=custom_dictionary_file,no_dictionary_update=no_dictionary_update)
       try:
-	custom_dictionary.get_nsyl("snowdens")
+	custom_dictionary.get_nsyl("homomorphism")
       except UnknownWordException as e:
 	print "Unknown word!"
       custom_dictionary.save_dict()
+      exit(0)
       
     else:
       print "Unhandled Option.\n"
