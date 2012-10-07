@@ -21,7 +21,7 @@ Check am using __init__ properly instead of __new__, also should probably save w
 
 Add vi addon
 
-Check all the getopt stuff
+Check all the getopt stuff, really not dont properly atm
 
 Errors:
 Many abound - check the logs!

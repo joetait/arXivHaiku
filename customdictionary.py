@@ -17,6 +17,24 @@
 #You should have received a copy of the GNU General Public License
 #along with arXivHaiku.  If not, see <http://www.gnu.org/licenses/>.
 
+def printlicense():
+  print """
+  arXivHaiku  Copyright 2012 Simon StJohn-Green
+    This program comes with ABSOLUTELY NO WARRANTY; for details see gpl.txt
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; see gpl.txt for details.
+  """       
+        
+def usage():
+  print """
+  Usage: 
+  --dictionary-file \t Use custom dictionary file, this option defaults to customdictionary.xml
+  -p \t Prompt user to enter new words into dictionary
+  -t \t Run some basic tests
+  
+  --dictionary-file option must be given before -p or -t
+  """
+
 import logging, StringIO, re, getopt, sys
 from lxml import etree
 from lxml.builder import E
@@ -132,7 +150,8 @@ class CustomDictionary(object):
     for unknown in unknowns:
       success_flag = False
       while not success_flag:
-	response = raw_input("How many syllables in: " + unknown[0] + "?  \"p\" for pass (ignore word) and \"q\" to quit").strip()
+	response = raw_input(unknown[0] + " has count " + str(unknown[1]) + " how many syllables?  " + \
+	                                  "Type \"p\" for pass (ignore word) and \"q\" to quit").strip()
 	if response=="q":
 	  return
 	elif response=="p":
@@ -148,18 +167,22 @@ class CustomDictionary(object):
 	    print "Only numbers between 1 and 10 inclusive are valid."
         
         if not success_flag:print "Unknown input, repeating."
-
+        
 if __name__=="__main__":
+  printlicense()
+  
   import arxivhaikulogger
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
   logger.info("Running customDictionary (new testing one) with __name__==__main__")
   
   custom_dictionary_file = False
+  no_counting = False
   
   try:
     opts, args = getopt.getopt(sys.argv[1:],":pt", ["dictionary-file="])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
+    usage()
     logger.critical("Caught getopt.GetoptError")
     sys.exit(2)
   input_xml = None
@@ -199,8 +222,9 @@ if __name__=="__main__":
       custom_dictionary.save_dict()
       
     else:
-      print "Unhandled Option\n"
+      print "Unhandled Option.\n"
+      usage()
       logger.critical("Unhandled Option")
       sys.exit(2)
  
-  print "You need to pass at least one option, -t to test, -p for prompt for user input.  Use --dictionary-file to specify dictionary file."
+  usage()
