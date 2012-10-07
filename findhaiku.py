@@ -133,9 +133,9 @@ def find_haiku_in_text(raw_text):
       haiku_found += find_haiku_in_blocks(blocks)
     return haiku_found
       
-def find_haiku_in_tex(raw_tex):
+def find_haiku_in_tex(raw_tex, no_dictionary_update):
   global custom_dictionary
-  custom_dictionary = CustomDictionary()
+  custom_dictionary = CustomDictionary(no_dictionary_update=no_dictionary_update)
   untex_thread_class = UntexThreadClass()
   raw_text = untex_thread_class.run_untex(raw_tex)
   haiku_found = find_haiku_in_text(raw_text)
@@ -148,9 +148,9 @@ if __name__=="__main__":
   import arxivhaikulogger
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
   logger.info("Running findHaiku with __name__==__main__")
-
+  no_dictionary_update = False
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "", ["input="])
+    opts, args = getopt.getopt(sys.argv[1:], "", ["no-dictionary-update", "input="])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
     logger.critical("Caught getopt.GetoptError")
@@ -158,7 +158,9 @@ if __name__=="__main__":
     sys.exit(2)
   input_file = None
   for o, a in opts:
-    if o == "--input":
+    if o == "--no-dictionary-update":
+      no_dictionary_update = True
+    elif o == "--input":
       input_file = a
     else:
       print "Unhandled Option\n"
@@ -177,7 +179,7 @@ if __name__=="__main__":
     logger.critical("Can't find input file")
     sys.exit(2)
   
-  haiku_list = find_haiku_in_tex(raw_tex) 
+  haiku_list = find_haiku_in_tex(raw_tex, no_dictionary_update=no_dictionary_update) 
   logger.info("Found the following haiku: " + str(haiku_list))
   if len(haiku_list)==0:
     print "Found no Haiku, sorry :("

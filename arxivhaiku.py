@@ -26,15 +26,19 @@ import getopt,sys
 if __name__=="__main__":  
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')
   logger.info("Running arXivHaiku with __name__==__main__")
+  
+  no_dictionary_update = False
   try:
-    opts, args = getopt.getopt(sys.argv[1:],"", ["input-xml="])
+    opts, args = getopt.getopt(sys.argv[1:],"", ["no-dictionary-update", "input-xml="])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
     logger.critical("Caught getopt.GetoptError")
     sys.exit(2)
   input_xml = None
   for o, a in opts:
-    if o == "--input-xml":
+    if o == "--no-dictionary-update":
+      no_dictionary_update = True
+    elif o == "--input-xml":
       input_xml = a
     else:
       print "Unhandled Option\n"
@@ -48,7 +52,7 @@ if __name__=="__main__":
     for (article_id, raw_tex) in rssparse(input_xml):
       logger.info("Attempting raw tex from article_id: "+ str(article_id))
       try:
-	haiku_list = find_haiku_in_tex(raw_tex)  
+	haiku_list = find_haiku_in_tex(raw_tex, no_dictionary_update=no_dictionary_update)  
       except RuntimeError as e:
 	logger.warning("Caught RuntimeError: "+ str(e))
       if len(haiku_list)==0:
