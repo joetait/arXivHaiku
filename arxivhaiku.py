@@ -58,6 +58,7 @@ class HaikuFindingThread(threading.Thread):
 	  return
 	  
 	logger.info("Attempting raw tex from article_id: "+ str(article_id))
+        haiku_list = []
 	try:
 	  haiku_list = find_haiku_in_tex(raw_tex, no_dictionary_update=no_dictionary_update)
 	except RuntimeError as e:
