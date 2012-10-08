@@ -147,10 +147,6 @@ def find_haiku_in_blocks(blocks):
 def find_haiku_in_text(raw_text):    
     haiku_found = []    
     
-    #replace eqnarray with \n\n - this fixes some recursion problems 
-    #   since it stops it from forming one massive paragraph and then recursing too much
-    raw_text = raw_text.replace("eqnarray", "\n\n")
-    
     paragraphs = raw_text.split("\n\n")
     #ignore single line breaks, tabs - replace with spaces
     paragraphs = [p.replace("\n", " ").replace("\t", " ") for p in paragraphs]
