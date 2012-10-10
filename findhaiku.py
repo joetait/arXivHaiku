@@ -114,32 +114,33 @@ def split_at_punctuation(paragraph):
     blocks = newblocks
   return [(block[:-1],block[-1]) for block in blocks if block!=""]
 
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+  
 #takes a list of blocks - tuples (words,punctuation) - and returns a list of Haiku with punctuation added back in
 def find_haiku_in_blocks(blocks):
-    data = []
-    haiku_found = []
-    
+    haiku_found = []    
     stack = [blocks]
     while len(stack)!=0:
-      logger.debug("entering loop of find_haiku_in_blocks with stack:" + repr(stack) )
+      data = []
+      #logger.debug("entering loop of find_haiku_in_blocks with stack:\n" + pp.pformat(stack) )
       current_blocks = stack.pop()
-      
       for (i, (block, ending_punctuation)) in enumerate(current_blocks):
+        #logger.debug("Attempting block:" + pp.pformat(block) )
 	try:
 	  data.append((sum([ nsyl(word) for word in block.split()]), block, ending_punctuation) )
-	  if len(data) > 2:
-            h = [data[i:i+3] for i in range(0, len(zip(*data)[0])-2) if zip(*data)[0][i:i+3] == (5, 7, 5) ]
-            haiku_found += ["".join([words+punctuation+" " for (syllables, words, punctuation) in haiku]) for haiku in h]
-
-	  #debug("Appending data:" + str ((sum(nsylBlock(block)), block))  + "\n----------------------------------------------\n\n")    
 	except UnknownWordException as e:  #Recurse if problem found
-	  logger.debug("Unknown word found: " + e.word)
-	  
-	  if i >= 2:  #If not then there aren't enough blocks for haiku anyway
-	    stack.append(current_blocks[0:i])
+	  #logger.debug("Unknown word found: " + e.word)
 	  if len(current_blocks)-1-(i+1) >= 2:  #If not then there aren't enough blocks for haiku anyway
 	    stack.append(current_blocks[i+1:])
-	      
+	  if i >= 2:  #If not then there aren't enough blocks for haiku anyway
+	    stack.append(current_blocks[0:i])
+	  break
+
+    if len(data) > 2:
+      h = [data[i:i+3] for i in range(0, len(zip(*data)[0])-2) if zip(*data)[0][i:i+3] == (5, 7, 5) ]
+      haiku_found += ["".join([words+punctuation+" " for (syllables, words, punctuation) in haiku]) for haiku in h]
+
     return haiku_found    
   
 def find_haiku_in_text(raw_text):    

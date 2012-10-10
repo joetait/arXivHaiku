@@ -1,5 +1,7 @@
 TODO:
 
+Remove all non-alphanumeric chars - have it emit a warning in customdict
+
 what if multiple tex files sent? - Maybe just string them together!
 
 Check how it behaves with "-" used as a punctuation seperator..
