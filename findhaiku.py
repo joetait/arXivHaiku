@@ -113,9 +113,6 @@ def split_at_punctuation(paragraph):
     blocks = newblocks
   return [(block[:-1],block[-1]) for block in blocks if block!=""]
 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
-  
 #takes a list of blocks - tuples (words,punctuation) - and returns a list of Haiku with punctuation added back in
 def find_haiku_in_blocks(blocks):
     haiku_found = []    
