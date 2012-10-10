@@ -40,6 +40,8 @@ d = cmudict.dict()
 from  customdictionary import CustomDictionary, UnknownWordException
 custom_dictionary = None
 
+sys.setrecursionlimit(1000)
+
 #If __name__=="__main__" then we will define the logger
 if __name__!="__main__":
   global logger
@@ -119,26 +121,32 @@ def find_haiku_in_blocks(blocks):
     data = []
     haiku_found = []
     
-    for (i, (block, ending_punctuation)) in enumerate(blocks):
-      try:
-	data.append((sum([ nsyl(word) for word in block.split()]), block, ending_punctuation) )
-	#debug("Appending data:" + str ((sum(nsylBlock(block)), block))  + "\n----------------------------------------------\n\n")    
-      except UnknownWordException as e:  #Recurse if problem found
-	logger.debug("Unknown word found: " + e.word)
-	if blocks[0:i]: 
-	  haiku_found += find_haiku_in_blocks(blocks[0:i])
-	if blocks[i+1:]: 
-	  haiku_found += find_haiku_in_blocks(blocks[i+1:])
-	return haiku_found
-	
-    if len(data) > 2:
-      haiku_found = [data[i:i+3] for i in range(0, len(zip(*data)[0])-2) if zip(*data)[0][i:i+3] == (5, 7, 5) ]
-      haiku_found = ["".join([words+punctuation+" " for (syllables, words, punctuation) in haiku]) for haiku in haiku_found]
+    stack = [blocks]
+    while len(stack)!=0:
+      logger.debug("entering loop of find_haiku_in_blocks with stack:" + repr(stack) )
+      current_blocks = stack.pop()
       
+      for (i, (block, ending_punctuation)) in enumerate(current_blocks):
+	try:
+	  data.append((sum([ nsyl(word) for word in block.split()]), block, ending_punctuation) )
+	  if len(data) > 2:
+            h = [data[i:i+3] for i in range(0, len(zip(*data)[0])-2) if zip(*data)[0][i:i+3] == (5, 7, 5) ]
+            haiku_found += ["".join([words+punctuation+" " for (syllables, words, punctuation) in haiku]) for haiku in h]
+
+	  #debug("Appending data:" + str ((sum(nsylBlock(block)), block))  + "\n----------------------------------------------\n\n")    
+	except UnknownWordException as e:  #Recurse if problem found
+	  logger.debug("Unknown word found: " + e.word)
+	  
+	  if i >= 2:  #If not then there aren't enough blocks for haiku anyway
+	    stack.append(current_blocks[0:i])
+	  if len(current_blocks)-1-(i+1) >= 2:  #If not then there aren't enough blocks for haiku anyway
+	    stack.append(current_blocks[i+1:])
+	      
     return haiku_found    
   
 def find_haiku_in_text(raw_text):    
     haiku_found = []    
+    
     paragraphs = raw_text.split("\n\n")
     #ignore single line breaks, tabs - replace with spaces
     paragraphs = [p.replace("\n", " ").replace("\t", " ") for p in paragraphs]
