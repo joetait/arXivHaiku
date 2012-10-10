@@ -40,8 +40,6 @@ d = cmudict.dict()
 from  customdictionary import CustomDictionary, UnknownWordException
 custom_dictionary = None
 
-sys.setrecursionlimit(1000)
-
 #If __name__=="__main__" then we will define the logger
 if __name__!="__main__":
   global logger
