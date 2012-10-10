@@ -37,6 +37,8 @@ from curses.ascii import isdigit
 from nltk.corpus import cmudict
 d = cmudict.dict() 
 
+nonalphanumeric_pattern = re.compile('[\W_]+')
+
 from  customdictionary import CustomDictionary, UnknownWordException
 custom_dictionary = None
 
@@ -89,7 +91,6 @@ def nsyl(word):  #Finds number of syllables in a word
       return sum([nsyl(w) for w in word.split("-")])
     
     #remove all alphanumeric characters
-    nonalphanumeric_pattern = re.compile('[\W_]+')
     word = nonalphanumeric_pattern.sub('', word).lower().strip()
     
     if word == "": return 0
