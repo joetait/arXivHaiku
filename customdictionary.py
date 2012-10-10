@@ -131,7 +131,7 @@ class CustomDictionary(object):
     
     #Check conforms to XML dict requirements
     if not self.__xml_schema_word_regex.match(word):
-      logger.debug("get_nsyl caught word that doesn't match xml requirements: " + word)
+      logger.info("get_nsyl caught word that doesn't match xml requirements: " + word)
       raise UnknownWordException(value=word, conforms_to_xml_requirements=False)
     
     try:

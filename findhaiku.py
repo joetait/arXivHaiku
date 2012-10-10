@@ -84,22 +84,20 @@ class UntexThreadClass(object):
     return self.raw_text
 
 def nsyl(word):  #Finds number of syllables in a word
-    word = word.lower().strip()
-    
-    if word == "": return 0
-    
     #If the word is hypenated then use the sum of the word on each side of the dash
     if "-" in word:
       return sum([nsyl(w) for w in word.split("-")])
     
-    #check for word "type" - alphanumeric etc
-    if re.match("^[a-z']+$", word):   #alphanumeric word
-      try:
-        #returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
-        return [len(list(y for y in x if isdigit(y[-1]))) for x in d[word.lower()]][0]
-      except KeyError as e:
-        return custom_dictionary.get_nsyl(word)
-    else: 
+    #remove all alphanumeric characters
+    nonalphanumeric_pattern = re.compile('[\W_]+')
+    word = nonalphanumeric_pattern.sub('', word).lower().strip()
+    
+    if word == "": return 0
+    
+    try:    
+      #returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
+      return [len(list(y for y in x if isdigit(y[-1]))) for x in d[word.lower()]][0]
+    except KeyError as e:
       return custom_dictionary.get_nsyl(word)
     
 #returns list of tuples of form (block,ending_punctuation)
