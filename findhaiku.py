@@ -37,8 +37,6 @@ from curses.ascii import isdigit
 from nltk.corpus import cmudict
 d = cmudict.dict() 
 
-nonalphanumeric_pattern = re.compile('[\W_]+')
-
 from  customdictionary import CustomDictionary, UnknownWordException
 custom_dictionary = None
 
@@ -90,9 +88,6 @@ def nsyl(word):  #Finds number of syllables in a word
     if "-" in word:
       return sum([nsyl(w) for w in word.split("-")])
     
-    #remove all alphanumeric characters
-    word = nonalphanumeric_pattern.sub('', word).lower().strip()
-    
     if word == "": return 0
     
     try:    
@@ -103,7 +98,7 @@ def nsyl(word):  #Finds number of syllables in a word
     
 #returns list of tuples of form (block,ending_punctuation)
 def split_at_punctuation(paragraph):  
-  punctuation = [".","!","(",")",":",",","?","[","]", ";"] 
+  punctuation = [".","!","(",")",":",",","?",";"] 
   blocks = [paragraph]
   for element in punctuation:
     newblocks = []
@@ -145,6 +140,10 @@ def find_haiku_in_text(raw_text):
     paragraphs = raw_text.split("\n\n")
     #ignore single line breaks, tabs - replace with spaces
     paragraphs = [p.replace("\n", " ").replace("\t", " ") for p in paragraphs]
+    
+    #remove all non-alphanumeric characters/non-punctuation characters   
+    nonalphanumeric_pattern = re.compile(r'[^\w\d\s\.!\(\):,\?;]+')
+    paragraphs = [nonalphanumeric_pattern.sub(' ',p).strip() for p in paragraphs]
     
     for paragraph in paragraphs:
       blocks = split_at_punctuation(paragraph)
