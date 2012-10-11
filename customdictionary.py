@@ -112,6 +112,9 @@ class CustomDictionary(object):
       " elements in ignored words.")
   
   def save_dict(self):
+    if self.__no_dictionary_update:
+      logger.info("no dictionary update flag set, not saving dictionary")
+      return
     knownwords_root = E.knownwords(E.entries( *[E.entry(E.word(word), E.syllables(str(syllables))) \
                                                 for (word, syllables) in self.__known_words.items()] ))
     unknownwords_root = E.unknownwords(E.entries( *[E.entry(E.word(word), E.count(str(count))) \
@@ -139,13 +142,13 @@ class CustomDictionary(object):
     except KeyError as e:
       if word in self.__ignored_words:
 	logger.debug("get_nsyl caught word already in ignored words: " + word)
-	if not self.__no_dictionary_update: self.__ignored_words[word] += 1
+	self.__ignored_words[word] += 1
       elif word in self.__unknown_words:
         logger.debug("get_nsyl caught word already in unknown words: " + word)
-	if not self.__no_dictionary_update: self.__unknown_words[word] += 1
+	self.__unknown_words[word] += 1
       else:
         logger.debug("get_nsyl caught new unknown word: " + word)
-	if not self.__no_dictionary_update: self.__unknown_words[word] = 1
+	self.__unknown_words[word] = 1
       raise UnknownWordException(value=word, conforms_to_xml_requirements=True)
   
   def prompt_user_for_new_words(self):
@@ -181,7 +184,7 @@ if __name__=="__main__":
   logger.info("Running customDictionary (new testing one) with __name__==__main__")
   
   custom_dictionary_file = False
-  no_dictionary_update = False
+  no_dictionary_update = False  #If this flag is set, it won't save the dictionary
   mode_prompt = False
   mode_test = False
   
