@@ -1,24 +1,8 @@
 TODO:
 
-Check no-dictionary-update flag
-
-Hangs after
-2012-10-11 08:41:22,209 - INFO - rssparser - Downloading: http://de.arxiv.org/e-print/1210.2806
-2012-10-11 08:41:25,623 - INFO - rssparser - Recieved: application/x-eprint-tar, unpacking..
-2012-10-11 08:41:25,647 - INFO - rssparser - Extracting: TAC_FP-11-725_-Rev1.synctex
-2012-10-11 08:41:25,668 - INFO - rssparser - Parsed entry associated to article_id: 1210.2806
-2012-10-11 08:41:25,669 - INFO - arxivhaiku - Attempting raw tex from article_id: 1210.2806
-2012-10-11 08:41:25,917 - INFO - customdictionary - Successfully loaded dictionary files: 172 elements in known words, 17198 elements in unknown words, and 95 elements in ignored words.
-2012-10-11 08:41:25,932 - INFO - findhaiku - untex thread started
-2012-10-11 08:41:26,011 - INFO - findhaiku - untex thread finished.
-
 what if multiple tex files sent? - Maybe just string them together!
 
 Add check for previously parsed files, etc
-
-Should I use -m in untex? Or add a switch?
-
-Check how it deals with single characters
 
 Stop using exit(1) to terminate on critical errors, have proper fallback
 Check am using __init__ properly instead of __new__, also should probably save with a destructor, or something like that
@@ -39,11 +23,3 @@ Traceback (most recent call last):
     logger.info("Parsed entry associated to article_id: " + str(parsed_entry[0]))
 TypeError: 'NoneType' object has no attribute '__getitem__'
 
-
-
-Many abound - check the logs!
-Recursion errors abound, maybe check lengths of things before splitting again and again!
-
-Dictionary error?
-Found the following Haiku in 1209.3215:
- maximum at ,  and minimum at . s
