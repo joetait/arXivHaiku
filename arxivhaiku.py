@@ -32,7 +32,9 @@ def usage():
   --input-xml= \t xml file from the arXiv to pull tex files from, defaults to http://export.arxiv.org/rss/math?mirror=edu
   """
 
-import arxivhaikulogger, logging, getopt,sys, threading, Queue
+import arxivhaikulogger, logging, getopt,sys, threading, Queue, re, StringIO
+from lxml import etree
+from lxml.builder import E
 from twitter import post_status_to_twitter
 from rssparser import rssparse
 from findhaiku import find_haiku_in_tex
@@ -74,7 +76,6 @@ class AlreadyParsedList(object):
     try:
       self.__already_parsed_list = root.find("entries").getchildren()
       self.__already_parsed_list = [entry.text for entry in self.__already_parsed_list]
-
     except AttributeError as e:
       logger.critical("Failed to parse alreadyparsed list: " + repr(e) )
       exit(1)
@@ -94,11 +95,11 @@ class AlreadyParsedList(object):
     logger.info("Successfully saved alreadyparsedlist to file")
    
   #check for article_id in list - if it doesn't appear add to the list 
-  def check_for_id(self, article_id):
+  def id_in_list(self, article_id):
+    article_id = str(article_id)
     if not self.__xml_schema_regex.match(article_id):
       logger.warning("check_for_id caught id that doesn't match xml requirements: " + article_id)
       return False
-    
     if article_id in self.__already_parsed_list:
       return True
     else:
@@ -119,11 +120,17 @@ class HaikuFindingThread(threading.Thread):
       self.terminate_request_flag = True
       
     def run(self):
+      already_parsed_list = AlreadyParsedList()
       for (article_id, raw_tex) in rssparse(input_xml):
 	if self.terminate_request_flag:
 	  logger.critical("Worker thread caught terminate_request_flag, terminating")
+          already_parsed_list.save_list()
 	  return
 	  
+        if already_parsed_list.id_in_list(article_id):
+          logger.info("already parsed id: " + article_id)
+          continue
+
 	logger.info("Attempting raw tex from article_id: "+ str(article_id))
         haiku_list = []
 	try:
@@ -136,6 +143,7 @@ class HaikuFindingThread(threading.Thread):
 	  for haiku in haiku_list:
 	    self.results_queue.put(haiku + " (" + str(article_id) + ") #arXivHaiku")
 	    logger.info("Found haiku in article_id :" + str(article_id) + " : " + haiku)
+      already_parsed_list.save_list()  
 
 if __name__=="__main__":  
   printlicense()
