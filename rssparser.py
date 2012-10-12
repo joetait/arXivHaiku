@@ -77,6 +77,9 @@ def parse_entry(entry):
 	        + "Failing on this entry.  This should never happen!  Error: "  + str(e))
 	return False
       return (article_id, raw_tex)	
+    elif content_type == "application/pdf":
+      logger.info("Recieved Content Type: application/pdf, not currently supported")
+      return False
     else:
       logger.warning("Recieved Content Type: " + str(content_type) + "\n With Encoding: " + str(content_encoding) + "\n Don't know what to do with this! Skipping to next entry\n\n")
       return False
