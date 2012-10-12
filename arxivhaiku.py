@@ -38,6 +38,73 @@ from rssparser import rssparse
 from findhaiku import find_haiku_in_tex
 from gettextwithvi import get_text_with_vi
 
+#This class maintains the list of articles already parsed
+class AlreadyParsedList(object): 
+  __already_parsed_list = None
+  __xml_schema_regex = re.compile(r"^\d{4}\.\d{4}$")
+  __schema_file = "alreadyparsedlist-schema.xsd"
+  
+  #If set to true then list won't be saved
+  __no_update = False
+  
+  def __init__(self, filename="alreadyparsedlist.xml", no_update = False):   
+    self.__filename = filename
+    self.__no_update = no_update
+    #--------------------
+    #  Import and check against schema
+    #--------------------
+    try:
+      schema_root = StringIO.StringIO(open(self.__schema_file).read())
+    except IOError as e:
+      logger.critical("Failed to open schema file: " + repr(e))
+      exit(1)
+    try:  
+      schema = etree.XMLSchema(etree.parse(schema_root))
+    except etree.XMLSyntaxError as e:
+      logger.critical("Failed to parse XML schema: " + repr(e))
+      exit(1)
+      
+    try:
+      parser = etree.XMLParser(schema = schema, remove_blank_text=True)
+      root = etree.parse(StringIO.StringIO( open(self.__filename, "r").read()),parser).getroot()
+    except etree.XMLSyntaxError as e:
+      logger.critical("Failed to parse alreadyparsed list: " + repr(e))
+      exit(1)  
+      
+    try:
+      self.__already_parsed_list = root.find("entries").getchildren()
+      self.__already_parsed_list = [entry.text for entry in self.__already_parsed_list]
+
+    except AttributeError as e:
+      logger.critical("Failed to parse alreadyparsed list: " + repr(e) )
+      exit(1)
+   
+    logger.info("Successfully loaded alreadyparsed list: " + str(len(self.__already_parsed_list)) + " elements in list")
+  
+  def save_list(self):
+    if self.__no_update:
+      logger.info("no alreadyparsedlist update flag set, not saving.")
+      return
+    already_parsed_root = E.entries( *[E.entry(article_id) for article_id in self.__already_parsed_list] )
+    try:
+      open(self.__filename, "w").write(etree.tostring(E.alreadyparsed( already_parsed_root), pretty_print=True))
+    except IOError as e:
+      logger.critical("Failed to save alreadyparsedlist to file: " + str(e))
+      
+    logger.info("Successfully saved alreadyparsedlist to file")
+   
+  #check for article_id in list - if it doesn't appear add to the list 
+  def check_for_id(self, article_id):
+    if not self.__xml_schema_regex.match(article_id):
+      logger.warning("check_for_id caught id that doesn't match xml requirements: " + article_id)
+      return False
+    
+    if article_id in self.__already_parsed_list:
+      return True
+    else:
+      self.__already_parsed_list.append(article_id)
+      return False
+
 #This thread takes input xml and spits out string files containing the Haiku to be processed
 class HaikuFindingThread(threading.Thread):
     def __init__(self, input_xml, no_dictionary_update, results_queue):

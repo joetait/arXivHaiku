@@ -1,0 +1,22 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+     <xsd:element name="alreadyparsed">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="entries" minOccurs="1" maxOccurs="1" type="entries"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+  
+  <xsd:complexType name="entries">
+    <xsd:sequence>
+      <xsd:element name="entry" minOccurs="0" maxOccurs="unbounded" type="entry"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:simpleType name="entry">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="\d{4}\.\d{4}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+ 
+</xsd:schema>
