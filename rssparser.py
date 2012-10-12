@@ -54,17 +54,21 @@ def parse_entry(entry):
       logger.info("Recieved: application/x-eprint-tar, unpacking..")
       tar = tarfile.open(filename, "r:gz")
       try:
+        raw_tex = ""
 	for tarinfo in tar:
 	  if tarinfo.isreg() and tarinfo.name[-3:] == "tex":
 	    logger.info("Extracting: "+tarinfo.name)
 	    try:
-	      raw_tex = tar.extractfile(tarinfo).read().decode("utf8", "ignore")
+	      raw_tex += tar.extractfile(tarinfo).read().decode("utf8", "ignore")
 	    except (UnicodeEncodeError,UnicodeDecodeError) as e:
 	      logger.warning("Caught UnicodeEncodeError/UnicodeDecodeError." \
 	        + "Failing on this entry.  This should never happen!  Error: "  + str(e))
 	      return False
-	    return (article_id, raw_tex)
 	tar.close()
+        if raw_tex != "":
+          return (article_id, raw_tex)
+        else:
+          return False
       except IOError as e:
 	logger.warning("Got IOError, failing on this entry.  Error: " + str(e))
 	return False

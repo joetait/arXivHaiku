@@ -1,7 +1,5 @@
 TODO:
 
-what if multiple tex files sent? - Maybe just string them together!
-
 Add check for previously parsed files, etc
 
 Stop using exit(1) to terminate on critical errors, have proper fallback
@@ -11,15 +9,4 @@ Check all the getopt stuff, really not dont properly atm
   - Should be able to give options in any order etc, 
   - setting -t and -p should be illegal in customdictionary
 
-Errors:
-
-Exception in thread Thread-1:
-Traceback (most recent call last):
-  File "/usr/lib/python2.7/threading.py", line 551, in __bootstrap_inner
-    self.run()
-  File "./arxivhaiku.py", line 55, in run
-    for (article_id, raw_tex) in rssparse(input_xml):
-  File "/home/simon/github/arXivHaiku/rssparser.py", line 34, in rssparse
-    logger.info("Parsed entry associated to article_id: " + str(parsed_entry[0]))
-TypeError: 'NoneType' object has no attribute '__getitem__'
 
