@@ -34,7 +34,7 @@ def rssparse(feed_name):
       logger.info("Parsed entry associated to article_id: " + str(parsed_entry[0]))
       yield parsed_entry
     else:
-      logger.warning("Failed to parse entry (ignoring): " + str(entry))
+      logger.info("Failed to parse entry (ignoring): " + str(entry))
     
 #Returns tuple (article_id, raw_tex) or False on failure, raw_tex is UTF8, article_id is xxxx.xxxx format
 def parse_entry(entry):
