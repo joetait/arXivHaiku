@@ -144,6 +144,10 @@ def find_haiku_in_text(raw_text):
     #remove all non-alphanumeric characters/non-punctuation characters   
     nonalphanumeric_pattern = re.compile(r'[^\w\d\s\.!\(\):,\?;]+')
     paragraphs = [nonalphanumeric_pattern.sub(' ',p).strip() for p in paragraphs]
+
+    #\W used above appears to allow underscores, so we also need:
+    underscore_pattern = re.compile(r'_+')
+    paragraphs = [underscore_pattern.sub(' ',p).strip() for p in paragraphs]
     
     for paragraph in paragraphs:
       blocks = split_at_punctuation(paragraph)
