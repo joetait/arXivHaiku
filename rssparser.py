@@ -89,8 +89,8 @@ def parse_entry(entry):
       return False
 	
 if __name__=="__main__":
-  import arxivhaikulogger
-  logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
+  import arXivHaikulogger
+  logger = arXivHaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
   logger.info("Running rssparser with __name__==__main__")
   
   print "Testing with rss17.09.2012.xml, entries up to 10:"

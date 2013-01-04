@@ -179,7 +179,7 @@ class CustomDictionary(object):
 if __name__=="__main__":
   printlicense()
   
-  import arxivhaikulogger
+  import arXivHaikulogger
   logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
   logger.info("Running customDictionary (new testing one) with __name__==__main__")
   

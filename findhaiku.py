@@ -164,8 +164,8 @@ def find_haiku_in_tex(raw_tex, the_custom_dictionary):
   
 if __name__=="__main__":  
   printlicense()
-  import arxivhaikulogger
-  logger = arxivhaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
+  import arXivHaikulogger
+  logger = arXivHaikulogger.setup_custom_logger('mainLogger')  #No need for global here - already at global scope
   logger.info("Running findHaiku with __name__==__main__")
   no_dictionary_update = False
   try:

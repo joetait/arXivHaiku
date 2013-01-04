@@ -154,7 +154,7 @@ class HaikuFindingThread(threading.Thread):
 if __name__=="__main__":  
   printlicense()
 
-  logger = arxivhaikulogger.setup_custom_logger('mainLogger')
+  logger = arXivHaikulogger.setup_custom_logger('mainLogger')
   logger.info("Running arXivHaiku with __name__==__main__")
   
   no_dictionary_update = False
