@@ -60,26 +60,26 @@ class AlreadyParsedList(object):
       schema_root = StringIO.StringIO(open(self.__schema_file).read())
     except IOError as e:
       logger.critical("Failed to open schema file: " + repr(e))
-      exit(1)
+      raise IOError("Failed to open schema file: " + repr(e))
     try:  
       schema = etree.XMLSchema(etree.parse(schema_root))
     except etree.XMLSyntaxError as e:
       logger.critical("Failed to parse XML schema: " + repr(e))
-      exit(1)
+      raise IOError("Failed to parse XML schema: " + repr(e))
       
     try:
       parser = etree.XMLParser(schema = schema, remove_blank_text=True)
       root = etree.parse(StringIO.StringIO( open(self.__filename, "r").read()),parser).getroot()
     except etree.XMLSyntaxError as e:
       logger.critical("Failed to parse alreadyparsed list: " + repr(e))
-      exit(1)  
+      raise IOError("Failed to parse alreadyparsed list: " + repr(e))
       
     try:
       self.__already_parsed_list = root.find("entries").getchildren()
       self.__already_parsed_list = [entry.text for entry in self.__already_parsed_list]
     except AttributeError as e:
       logger.critical("Failed to parse alreadyparsed list: " + repr(e) )
-      exit(1)
+      raise IOError("Failed to parse alreadyparsed list: " + repr(e) )
    
     logger.info("Successfully loaded alreadyparsed list: " + str(len(self.__already_parsed_list)) + " elements in list")
   
