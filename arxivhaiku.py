@@ -39,6 +39,7 @@ from twitter import post_status_to_twitter
 from rssparser import rssparse
 from findhaiku import find_haiku_in_tex
 from gettextwithvi import get_text_with_vi
+from customdictionary import CustomDictionary, UnknownWordException
 
 #This class maintains the list of articles already parsed
 class AlreadyParsedList(object): 
@@ -106,35 +107,40 @@ class AlreadyParsedList(object):
       self.__already_parsed_list.append(article_id)
       return False
 
+
 #This thread takes input xml and spits out string files containing the Haiku to be processed
 class HaikuFindingThread(threading.Thread):
     def __init__(self, input_xml, no_dictionary_update, results_queue):
       self.input_xml = input_xml
-      self.no_dictionary_update = no_dictionary_update
+      self.custom_dictionary = CustomDictionary(no_dictionary_update=no_dictionary_update)
       self.results_queue = results_queue
       self.terminate_request_flag = False
-      
+      self.already_parsed_list = AlreadyParsedList()
       threading.Thread.__init__(self)
       
     def terminate_request(self):
       self.terminate_request_flag = True
       
     def run(self):
-      already_parsed_list = AlreadyParsedList()
+      def on_termination():
+        self.already_parsed_list.save_list()
+        self.custom_dictionary.save_dict()
+        return
+
       for (article_id, raw_tex) in rssparse(input_xml):
 	if self.terminate_request_flag:
 	  logger.critical("Worker thread caught terminate_request_flag, terminating")
-          already_parsed_list.save_list()
+          on_termination()
 	  return
 	  
-        if already_parsed_list.id_in_list(article_id):
+        if self.already_parsed_list.id_in_list(article_id):
           logger.info("already parsed id: " + article_id)
           continue
 
 	logger.info("Attempting raw tex from article_id: "+ str(article_id))
         haiku_list = []
 	try:
-	  haiku_list = find_haiku_in_tex(raw_tex, no_dictionary_update=no_dictionary_update)
+	  haiku_list = find_haiku_in_tex(raw_tex, self.custom_dictionary)
 	except RuntimeError as e:
 	  logger.warning("Caught RuntimeError: "+ str(e))
 	if len(haiku_list)==0:
@@ -143,8 +149,8 @@ class HaikuFindingThread(threading.Thread):
 	  for haiku in haiku_list:
 	    self.results_queue.put(haiku + " (" + str(article_id) + ") #arXivHaiku")
 	    logger.info("Found haiku in article_id :" + str(article_id) + " : " + haiku)
-      already_parsed_list.save_list()  
-
+      on_termination()
+      
 if __name__=="__main__":  
   printlicense()
 

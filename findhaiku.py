@@ -154,13 +154,12 @@ def find_haiku_in_text(raw_text):
       haiku_found += find_haiku_in_blocks(blocks)
     return haiku_found
       
-def find_haiku_in_tex(raw_tex, no_dictionary_update):
+def find_haiku_in_tex(raw_tex, the_custom_dictionary):
   global custom_dictionary
-  custom_dictionary = CustomDictionary(no_dictionary_update=no_dictionary_update)
+  custom_dictionary = the_custom_dictionary
   untex_thread_class = UntexThreadClass()
   raw_text = untex_thread_class.run_untex(raw_tex)
   haiku_found = find_haiku_in_text(raw_text)
-  custom_dictionary.save_dict()
   return haiku_found
   
 if __name__=="__main__":  
@@ -210,7 +209,9 @@ if __name__=="__main__":
     logger.critical("Can't find input file")
     sys.exit(2)
   
-  haiku_list = find_haiku_in_tex(raw_tex, no_dictionary_update=no_dictionary_update) 
+  custom_dictionary = CustomDictionary(no_dictionary_update=no_dictionary_update)
+  haiku_list = find_haiku_in_tex(raw_tex, custom_dictionary) 
+  custom_dictionary.save_dict()
   logger.info("Found the following haiku: " + str(haiku_list))
   if len(haiku_list)==0:
     print "Found no Haiku, sorry :("
