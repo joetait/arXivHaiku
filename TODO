@@ -1,13 +1,8 @@
 TODO:
 
-Optimise dictionary, so it doesn't reload all the time - have it so find_haiku_in_raw_tex takes a dictionary class from arXivHaiku, one that is created in the FindHaiku thread.  
-  -- Do same for alreadyparsedlist, in fact just look at this in general
-
 Check using the correct data structures etc
 
 Look at optimising most run 10% (probably in findhaiku)
-
-Add check for previously parsed files, etc
 
 Stop using exit(1) to terminate on critical errors, have proper fallback
 Check am using __init__ properly instead of __new__, also should probably save with a destructor, or something like that
