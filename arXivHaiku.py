@@ -32,7 +32,7 @@ def usage():
   --input-xml= \t xml file from the arXiv to pull tex files from, defaults to http://export.arxiv.org/rss/math?mirror=edu
   """
 
-import arxivhaikulogger, logging, getopt,sys, threading, Queue, re, StringIO
+import arXivHaikulogger, logging, getopt,sys, threading, Queue, re, StringIO
 from lxml import etree
 from lxml.builder import E
 from twitter import post_status_to_twitter

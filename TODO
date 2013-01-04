@@ -1,8 +1,3 @@
 TODO:
 
-Stop using exit(1) to terminate on critical errors, have proper fallback
-
-Check am using __init__ properly instead of __new__, also should probably save with a destructor, or something like that
- - rssparser, gettextwithvi, arxivhaikulogger and twitter are fine
- - findhaiku.py does this when untex doesnt exist
- - In customdictionary, should have a seperate load_file() command which can fail?
+rename everything arXivHaiku not arxivhaiku
