@@ -70,19 +70,19 @@ class CustomDictionary(object):
       schema_root = StringIO.StringIO(open(self.__custom_dictionary_schema_file).read())
     except IOError as e:
       logger.critical("Failed to open schema file: " + repr(e))
-      exit(1)
+      raise IOError("CustomDictionary - Failed to open schema file: " + repr(e))
     try:  
       schema = etree.XMLSchema(etree.parse(schema_root))
     except etree.XMLSyntaxError as e:
       logger.critical("Failed to parse XML schema: " + repr(e))
-      exit(1)
+      raise IOError("Failed to parse XML schema: " + repr(e))
       
     try:
       parser = etree.XMLParser(schema = schema, remove_blank_text=True)
       root = etree.parse(StringIO.StringIO( open(self.__custom_dictionary_file, "r").read()),parser).getroot()
     except etree.XMLSyntaxError as e:
       logger.critical("Failed to parse customdictionary: " + repr(e))
-      exit(1)  
+      raise IOError("Failed to parse customdictionary: " + repr(e))
       
     try:
       self.__known_words = root.find("knownwords").find("entries").getchildren()
@@ -93,7 +93,7 @@ class CustomDictionary(object):
       self.__unknown_words = dict([(entry.find("word").text, int(entry.find("count").text)) for entry in self.__unknown_words])
     except AttributeError as e:
       logger.critical("Failed to parse customdictionary: " + repr(e) )
-      exit(1)
+      raise IOError("Failed to parse customdictionary: " + repr(e) )
     #--------------------
     #  Check that the same word doesn't appear in >1 list
     #--------------------
