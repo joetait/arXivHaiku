@@ -1,2 +1,3 @@
 TODO:
 
+findhaiku has some ugly stuff in it, particularly nsyl etc - no need for this "-" stuff, just replace with " ".  Is the if statement ever called either? 
