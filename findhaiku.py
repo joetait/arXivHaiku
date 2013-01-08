@@ -35,6 +35,7 @@ def usage():
 import os.path, subprocess, threading, StringIO, re, io, getopt, sys, logging
 from curses.ascii import isdigit
 from nltk.corpus import cmudict
+from iambic import Iambic
 d = cmudict.dict() 
 
 from  customdictionary import CustomDictionary, UnknownWordException
@@ -149,7 +150,7 @@ def find_haiku_in_text(raw_text):
     underscore_pattern = re.compile(r'_+')
     paragraphs = [underscore_pattern.sub(' ',p).strip() for p in paragraphs]
     
-    iambic = Iambic()
+    iambic = Iambic(custom_dictionary)
 
     for paragraph in paragraphs:
       blocks = split_at_punctuation(paragraph)
@@ -170,59 +171,6 @@ def find_haiku_in_tex(raw_tex, the_custom_dictionary):
   raw_text = untex_thread_class.run_untex(raw_tex)
   haiku_found = find_haiku_in_text(raw_text)
   return haiku_found
-
-#Find Iambic Pentameters!  
-class Iambic:
-  def __init__(self):
-    logger.debug("Initialising Iambic class")
-    self.clause_dict = {}   # Should load this from file
-    self.poem = []
-  #Detects if sentance is iambic, this turns out to be quite hard
-  #  for now just counts the syllables, up to 10
-  def is_iambic(self,clause):
-    #print [e for word in clause.lower().split() for e in d[word][0]]
-    try:
-      logger.debug( sum ([nsyl(word) for word in clause.lower().split()]) )
-      return sum ([nsyl(word) for word in clause.lower().split()]) == 10
-    except UnknownWordException as e:
-      return False
-  
-  def strip_emph(self,syllable):
-    if isdigit(syllable[-1]):
-      return syllable[:-1]
-    else:
-      return syllable
- 
-  #Pulls last two syllables from clause
-  def rhyming_end(self,clause):
-    clause = clause.replace("-", " ")   #Do this is nysl too..  Could also probably remove the if statement
-    try:
-      return tuple([self.strip_emph(e) for word in clause.lower().split() 
-                                  for e in d[word][0]][-2:])
-    except KeyError as e:
-      return False
-
-  def process_clause(self, clause):
-    logger.debug("processing: " + clause)
-    if self.is_iambic(clause):
-      end = self.rhyming_end(clause)
-      if end == False: 
-        logger.debug("Is iambic, failed to get rhyming end though")
-        return
-      
-      if end in self.clause_dict:
-        logger.debug("Is iambic, rhymes with: " + self.clause_dict[end])
-        self.poem.append(self.clause_dict.pop(end))
-        self.poem.append(clause)
-      else:
-        self.clause_dict[end] = clause
-        logger.debug("Is iambic, added to clause_dict: " + repr(self.clause_dict))
-    
-    else: 
-      logger.debug("Not iambic")
-
-  def get_poem(self):
-    return self.poem
 
 if __name__=="__main__":  
   printlicense()
