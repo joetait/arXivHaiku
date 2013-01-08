@@ -135,7 +135,7 @@ def find_haiku_in_blocks(blocks):
 
     return haiku_found    
   
-def find_haiku_in_text(raw_text):    
+def find_haiku_in_text(raw_text, iambic):    
     haiku_found = []    
     
     paragraphs = raw_text.split("\n\n")
@@ -150,8 +150,6 @@ def find_haiku_in_text(raw_text):
     underscore_pattern = re.compile(r'_+')
     paragraphs = [underscore_pattern.sub(' ',p).strip() for p in paragraphs]
     
-    iambic = Iambic(custom_dictionary)
-
     for paragraph in paragraphs:
       blocks = split_at_punctuation(paragraph)
 
@@ -164,12 +162,12 @@ def find_haiku_in_text(raw_text):
 
     return haiku_found
       
-def find_haiku_in_tex(raw_tex, the_custom_dictionary):
+def find_haiku_in_tex(raw_tex, the_custom_dictionary, iambic):
   global custom_dictionary
   custom_dictionary = the_custom_dictionary
   untex_thread_class = UntexThreadClass()
   raw_text = untex_thread_class.run_untex(raw_tex)
-  haiku_found = find_haiku_in_text(raw_text)
+  haiku_found = find_haiku_in_text(raw_text, iambic)
   return haiku_found
 
 if __name__=="__main__":  
@@ -218,10 +216,11 @@ if __name__=="__main__":
     print "Can't find input file.\n"
     logger.critical("Can't find input file")
     sys.exit(2)
-  
-  custom_dictionary = CustomDictionary(no_dictionary_update=no_dictionary_update)
-  haiku_list = find_haiku_in_tex(raw_tex, custom_dictionary) 
+  custom_dictionary = CustomDictionary(no_dictionary_update = no_dictionary_update)
+  iambic = Iambic(custom_dictionary)
+  haiku_list = find_haiku_in_tex(raw_tex, custom_dictionary, iambic) 
   custom_dictionary.save_dict()
+
   logger.info("Found the following haiku: " + str(haiku_list))
   if len(haiku_list)==0:
     print "Found no Haiku, sorry :("
@@ -229,3 +228,7 @@ if __name__=="__main__":
     print "Found the following Haiku:"
     for haiku in haiku_list:
       print haiku
+  
+  logger.info("Found the following poem: " + str(iambic.get_poem()))
+  print "Found the following poem: " + str(iambic.get_poem())
+

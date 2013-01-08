@@ -40,6 +40,7 @@ from rssparser import rssparse
 from findhaiku import find_haiku_in_tex
 from gettextwithvi import get_text_with_vi
 from customdictionary import CustomDictionary, UnknownWordException
+from iambic import Iambic
 
 #This class maintains the list of articles already parsed
 class AlreadyParsedList(object): 
@@ -110,12 +111,13 @@ class AlreadyParsedList(object):
 
 #This thread takes input xml and spits out string files containing the Haiku to be processed
 class HaikuFindingThread(threading.Thread):
-    def __init__(self, input_xml, no_dictionary_update, results_queue):
+    def __init__(self, input_xml, custom_dictionary, results_queue, iambic):
       self.input_xml = input_xml
-      self.custom_dictionary = CustomDictionary(no_dictionary_update=no_dictionary_update)
+      self.custom_dictionary = custom_dictionary
       self.results_queue = results_queue
       self.terminate_request_flag = False
       self.already_parsed_list = AlreadyParsedList()
+      self.iambic = iambic
       threading.Thread.__init__(self)
       
     def terminate_request(self):
@@ -124,7 +126,6 @@ class HaikuFindingThread(threading.Thread):
     def run(self):
       def on_termination():
         self.already_parsed_list.save_list()
-        self.custom_dictionary.save_dict()
         return
 
       for (article_id, raw_tex) in rssparse(input_xml):
@@ -140,7 +141,7 @@ class HaikuFindingThread(threading.Thread):
 	logger.info("Attempting raw tex from article_id: "+ str(article_id))
         haiku_list = []
 	try:
-	  haiku_list = find_haiku_in_tex(raw_tex, self.custom_dictionary)
+	  haiku_list = find_haiku_in_tex(raw_tex, self.custom_dictionary, self.iambic)
 	except RuntimeError as e:
 	  logger.warning("Caught RuntimeError: "+ str(e))
 	if len(haiku_list)==0:
@@ -187,10 +188,17 @@ if __name__=="__main__":
   if not input_xml:
     print "No input xml set, using default: http://export.arxiv.org/rss/math?mirror=edu"
     input_xml = "http://export.arxiv.org/rss/math?mirror=edu"
-    
+  
+  #TODO This should be in try catch block? 
+  custom_dictionary = CustomDictionary(no_dictionary_update = no_dictionary_update)
+
   try:
     results_queue = Queue.Queue()
-    haiku_finding_thread = HaikuFindingThread(input_xml=input_xml,no_dictionary_update=no_dictionary_update, results_queue=results_queue)
+    iambic = Iambic(custom_dictionary)
+    haiku_finding_thread = HaikuFindingThread(input_xml=input_xml,
+                                custom_dictionary=custom_dictionary,
+                                results_queue=results_queue, 
+                                iambic=iambic)
     haiku_finding_thread.start()
     while(haiku_finding_thread.is_alive()):
       try:
@@ -216,3 +224,8 @@ if __name__=="__main__":
     print "Caught KeyboardInterrupt, Attempting to terminate worker thread"
     logger.critical("Caught KeyboardInterrupt, Attempting to terminate worker thread")    
     haiku_finding_thread.terminate_request()
+  
+  finally:
+    custom_dictionary.save_dict()
+
+  print iambic.get_poem()
