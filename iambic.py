@@ -26,43 +26,58 @@ def printlicense():
   """       
       
 #import os.path, subprocess, threading, StringIO, re, io, getopt, sys, logging
+import logging
 from curses.ascii import isdigit
 from nltk.corpus import cmudict
 d = cmudict.dict() 
 
 class Iambic:
   def __init__(self):
+    logger.debug("Initialising Iambic class")
     self.clause_dict = {}   # Should load this from file
     self.poem = []
 
   #Detects if sentance is iambic, this turns out to be quite hard
   #  for now just counts the syllables, up to 10
-  def is_iambic(clause):
+  def is_iambic(self,clause):
     #print [e for word in clause.lower().split() for e in d[word][0]]
+    logger.debug( sum ([nsyl(word) for word in clause.lower().split()]) )
     return sum ([nsyl(word) for word in clause.lower().split()]) == 10
-   
+  
+  def strip_emph(self,syllable):
+    if isdigit(syllable[-1]):
+      return syllable[:-1]
+    else:
+      return syllable
+ 
   #Pulls last two syllables from clause
-  def rhyming_end(clause):
+  def rhyming_end(self,clause):
     clause = clause.replace("-", " ")   #Do this is nysl too..  Could also probably remove the if statement
     try:
-      return tuple([e for word in clause.lower().split() for e in d[word][0]][-2:])
+      return tuple([self.strip_emph(e) for word in clause.lower().split() 
+                                  for e in d[word][0]][-2:])
     except KeyError as e:
       return False
 
   def process_clause(self, clause):
-
-  ########### HAVEN'T EVEN PROOF READ THIS YET...
-
-    if is_iambic(clause):
-      end = rhyming_end(clause)
-      if end == False: return
+    logger.debug("processing: " + clause)
+    if self.is_iambic(clause):
+      end = self.rhyming_end(clause)
+      if end == False: 
+        logger.debug("Is iambic, failed to get rhyming end though")
+        return
       
       if end in self.clause_dict:
-        self.poem.append(self.clause_dict[end])
-        self.poem.append(self.clause)
+        logger.debug("Is iambic, rhymes with: " + self.clause_dict[end])
+        self.poem.append(self.clause_dict.pop(end))
+        self.poem.append(clause)
+        logger.critical("New peice of Poem: " + repr(self.poem))
       else:
         self.clause_dict[end] = clause
-  
+        logger.debug("Is iambic, added to clause_dict: " + repr(self.clause_dict))
+    
+    else: 
+      logger.debug("Not iambic")
 
 #If __name__=="__main__" then we will define the logger
 if __name__!="__main__":
@@ -84,6 +99,22 @@ def nsyl(word):  #Finds number of syllables in a word
       #return custom_dictionary.get_nsyl(word)
 
 if __name__=="__main__":
-  print is_iambic("Now is the winter of our discontent")
+  import arXivHaikulogger
+  
+  #No need for global here - already at global scope
+  logger = arXivHaikulogger.setup_custom_logger('mainLogger') 
+  logger.info("Running findHaiku with __name__==__main__")
+  logger.setLevel(logging.DEBUG)
+
+  iambic = Iambic()
+  iambic.process_clause("Now the winter of our discontent")
+  iambic.process_clause("winter of our discontent caring")
+  iambic.process_clause("Now is the winter of our car wing")
+  iambic.process_clause("winter of our discontent hammer")
+  iambic.process_clause("Now is is the winter of the slammer")
+
+
+  
+
 
 
