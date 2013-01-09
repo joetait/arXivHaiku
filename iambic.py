@@ -17,42 +17,51 @@
 #You should have received a copy of the GNU General Public License
 #along with arXivHaiku.  If not, see <http://www.gnu.org/licenses/>.
 
-def printlicense():
-  print """
-  findhaiku is part of arXivHaiku  Copyright 2012 Simon StJohn-Green
-    This program comes with ABSOLUTELY NO WARRANTY; for details see gpl.txt
-    This is free software, and you are welcome to redistribute it
-    under certain conditions; see gpl.txt for details.
-  """       
-      
-#import os.path, subprocess, threading, StringIO, re, io, getopt, sys, logging
 import logging
 from curses.ascii import isdigit
 from nltk.corpus import cmudict
 d = cmudict.dict() 
 
+from  customdictionary import CustomDictionary, UnknownWordException
+
+#If __name__=="__main__" then we will define the logger
+if __name__!="__main__":
+  global logger
+  logger = logging.getLogger('mainLogger')
+
+#Find Iambic Pentameters!  
 class Iambic:
-  def __init__(self):
+  def __init__(self, custom_dictionary):
     logger.debug("Initialising Iambic class")
     self.clause_dict = {}   # Should load this from file
     self.poem = []
+    self.custom_dictionary = custom_dictionary
+
+  def nsyl(self,word):  #Finds number of syllables in a word
+    try:    
+      #returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
+      return [len(list(y for y in x if isdigit(y[-1]))) for x in d[word.lower()]][0]
+    except KeyError as e:
+      return self.custom_dictionary.get_nsyl(word)
 
   #Detects if sentance is iambic, this turns out to be quite hard
   #  for now just counts the syllables, up to 10
   def is_iambic(self,clause):
     #print [e for word in clause.lower().split() for e in d[word][0]]
-    logger.debug( sum ([nsyl(word) for word in clause.lower().split()]) )
-    return sum ([nsyl(word) for word in clause.lower().split()]) == 10
+    try:
+      logger.debug( sum ([self.nsyl(word) for word in clause.lower().split()]) )
+      return sum ([self.nsyl(word) for word in clause.lower().split()]) == 10
+    except UnknownWordException as e:
+      return False
   
-  def strip_emph(self,syllable):
+  def strip_emph(self, syllable):
     if isdigit(syllable[-1]):
       return syllable[:-1]
     else:
       return syllable
  
   #Pulls last two syllables from clause
-  def rhyming_end(self,clause):
-    clause = clause.replace("-", " ")   #Do this is nysl too..  Could also probably remove the if statement
+  def rhyming_end(self, clause):
     try:
       return tuple([self.strip_emph(e) for word in clause.lower().split() 
                                   for e in d[word][0]][-2:])
@@ -71,7 +80,6 @@ class Iambic:
         logger.debug("Is iambic, rhymes with: " + self.clause_dict[end])
         self.poem.append(self.clause_dict.pop(end))
         self.poem.append(clause)
-        logger.critical("New peice of Poem: " + repr(self.poem))
       else:
         self.clause_dict[end] = clause
         logger.debug("Is iambic, added to clause_dict: " + repr(self.clause_dict))
@@ -79,42 +87,25 @@ class Iambic:
     else: 
       logger.debug("Not iambic")
 
-#If __name__=="__main__" then we will define the logger
-if __name__!="__main__":
-  global logger
-  logger = logging.getLogger('mainLogger')
+  def get_poem(self):
+    return self.poem
 
-def nsyl(word):  #Finds number of syllables in a word
-    #If the word is hypenated then use the sum of the word on each side of the dash
-    if "-" in word:
-      return sum([nsyl(w) for w in word.split("-")])
-    
-    if word == "": return 0
-    
-    try:    
-      #returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
-      return [len(list(y for y in x if isdigit(y[-1]))) for x in d[word.lower()]][0]
-    except KeyError as e:
-      print "KeyError in nsyl booo"
-      #return custom_dictionary.get_nsyl(word)
 
 if __name__=="__main__":
-  import arXivHaikulogger
+  import arXivHaikulogger, customdictionary, logging
   
   #No need for global here - already at global scope
   logger = arXivHaikulogger.setup_custom_logger('mainLogger') 
   logger.info("Running findHaiku with __name__==__main__")
   logger.setLevel(logging.DEBUG)
 
-  iambic = Iambic()
+  custom_dictionary = CustomDictionary()
+  iambic = Iambic(custom_dictionary)
   iambic.process_clause("Now the winter of our discontent")
   iambic.process_clause("winter of our discontent caring")
   iambic.process_clause("Now is the winter of our car wing")
   iambic.process_clause("winter of our discontent hammer")
   iambic.process_clause("Now is is the winter of the slammer")
+  custom_dictionary.save_dict()
 
-
-  
-
-
-
+  print iambic.get_poem()
