@@ -153,6 +153,23 @@ class HaikuFindingThread(threading.Thread):
 	    logger.info("Found haiku in article_id :" + str(article_id) + " : " + haiku)
       on_termination()
 
+#Input poem, check with user for suitability etc
+def deal_with_poem_stuff(poem):
+  finished_poem = []
+  while poem and len(finished_poem) <= 10:
+    (line1, line2) = (poem.pop(), poem.pop())
+    candidate = line1 + "\n" + line2
+    x = raw_input("Add the following to the poem (y/n)?\n" + candidate).strip().lower()
+    if x != "y":
+      continue
+    line1 = get_text_with_vi(line1, "\n Edit line 1")
+    line2 = get_text_with_vi(line2, "\n Edit line 2")
+
+    finished_poem += [line1, line2]   
+
+  return finished_poem
+
+
 if __name__=="__main__":  
   printlicense()
 
@@ -206,7 +223,7 @@ if __name__=="__main__":
         haiku = results_queue.get(block=True,timeout=1)  #Need such a timeout so KeyboardInterrupt works!
         successful_input_flag = False
         while not successful_input_flag:
-          x = raw_input("Post the following to twitter after editing (Y/N)?\n" + haiku).strip().lower()
+          x = raw_input("Post the following to twitter after editing (y/n)?\n" + haiku).strip().lower()
           if x == "y":
 	    successful_input_flag = True
 	    haiku = get_text_with_vi(haiku, "\n Edit Haiku to post to twitter.")
@@ -228,4 +245,4 @@ if __name__=="__main__":
   finally:
     custom_dictionary.save_dict()
 
-  print iambic.get_poem()
+  print deal_with_poem_stuff(iambic.get_poem())
