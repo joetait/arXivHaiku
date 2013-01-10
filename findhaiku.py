@@ -109,6 +109,20 @@ def split_at_punctuation(paragraph):
     blocks = newblocks
   return [(block[:-1],block[-1]) for block in blocks if block!=""]
 
+#Attempt to clean up text a bit (take Haiku, return properly formatted etc)
+def cleanup_text(text):
+  #Try to correct spacing
+  text = " ".join(text.split()).replace(".",". ")
+ 
+  #Capitalise first letter of string.
+  text = text[0].upper() + text[1:]  
+  
+  #If last peice of punctuation is a "(", pretend it is a ";"
+  if text[-1] == "(":
+    text = text[:-1] + ";"
+
+  return text  
+
 #takes a list of blocks - tuples (words,punctuation) - and returns a list of Haiku with punctuation added back in
 def find_haiku_in_blocks(blocks):
     haiku_found = []    
@@ -132,15 +146,15 @@ def find_haiku_in_blocks(blocks):
     if len(data) > 2:
       h = [data[i:i+3] for i in range(0, len(zip(*data)[0])-2) if zip(*data)[0][i:i+3] == (5, 7, 5) ]
       haiku_found += ["".join([words+punctuation+" " for (syllables, words, punctuation) in haiku]) for haiku in h]
-
+      haiku_found = [cleanup_text(haiku) for haiku in haiku_found]
     return haiku_found    
   
 def find_haiku_in_text(raw_text, iambic):    
     haiku_found = []    
     
     paragraphs = raw_text.split("\n\n")
-    #ignore single line breaks, tabs - replace with spaces
-    paragraphs = [p.replace("\n", " ").replace("\t", " ") for p in paragraphs]
+    #ignore single line breaks, tabs, carriage returns - replace with spaces
+    paragraphs = [p.replace("\n", " ").replace("\t", " ").replace("\r", " ") for p in paragraphs]
     
     #remove all non-alphanumeric characters/non-punctuation characters   
     nonalphanumeric_pattern = re.compile(r'[^\w\d\s\.!\(\):,\?;]+')
@@ -152,14 +166,9 @@ def find_haiku_in_text(raw_text, iambic):
     
     for paragraph in paragraphs:
       blocks = split_at_punctuation(paragraph)
-
       for block in blocks:
         iambic.process_clause(block[0])
-
       haiku_found += find_haiku_in_blocks(blocks)
-
-    logger.info("Found the following iambic things:" + str(iambic.get_poem()))
-
     return haiku_found
       
 def find_haiku_in_tex(raw_tex, the_custom_dictionary, iambic):

@@ -124,6 +124,7 @@ class HaikuFindingThread(threading.Thread):
       self.terminate_request_flag = True
       
     def run(self):
+      logger.info("Haiku Findin thread started")
       def on_termination():
         self.already_parsed_list.save_list()
         return
@@ -151,7 +152,7 @@ class HaikuFindingThread(threading.Thread):
 	    self.results_queue.put(haiku + " (" + str(article_id) + ") #arXivHaiku")
 	    logger.info("Found haiku in article_id :" + str(article_id) + " : " + haiku)
       on_termination()
-      
+
 if __name__=="__main__":  
   printlicense()
 
@@ -203,7 +204,6 @@ if __name__=="__main__":
     while(haiku_finding_thread.is_alive()):
       try:
         haiku = results_queue.get(block=True,timeout=1)  #Need such a timeout so KeyboardInterrupt works!
-        
         successful_input_flag = False
         while not successful_input_flag:
           x = raw_input("Post the following to twitter after editing (Y/N)?\n" + haiku).strip().lower()

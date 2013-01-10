@@ -68,6 +68,16 @@ class Iambic:
     except KeyError as e:
       return False
 
+  #Attempt to clean up text a bit (take Haiku, return properly formatted etc)
+  def cleanup_text(self, text):
+    #Try to correct spacing
+    text = " ".join(text.split()).replace(".",". ")
+ 
+    #Capitalise first letter of string.
+    text = text[0].upper() + text[1:]  
+
+    return text
+
   def process_clause(self, clause):
     logger.debug("processing: " + clause)
     if self.is_iambic(clause):
@@ -76,6 +86,8 @@ class Iambic:
         logger.debug("Is iambic, failed to get rhyming end though")
         return
       
+      clause = self.cleanup_text(clause)
+
       if end in self.clause_dict:
         logger.debug("Is iambic, rhymes with: " + self.clause_dict[end])
         self.poem.append(self.clause_dict.pop(end))
