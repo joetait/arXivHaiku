@@ -41,6 +41,7 @@ from findhaiku import find_haiku_in_tex
 from gettextwithvi import get_text_with_vi
 from customdictionary import CustomDictionary, UnknownWordException
 from iambic import Iambic
+from iambictoserver import post_to_server
 
 #This class maintains the list of articles already parsed
 class AlreadyParsedList(object): 
@@ -245,4 +246,8 @@ if __name__=="__main__":
   finally:
     custom_dictionary.save_dict()
 
-  print deal_with_poem_stuff(iambic.get_poem())
+  if post_to_server(deal_with_poem_stuff(iambic.get_poem())):
+    print "Successfully posted to server"
+  else:
+    print "Failed to post to server"
+
