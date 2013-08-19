@@ -40,6 +40,9 @@ from rssparser import rssparse
 from findhaiku import find_haiku_in_tex
 from gettextwithvi import get_text_with_vi
 from customdictionary import CustomDictionary, UnknownWordException
+from facebookintegration import get_arxivhaiku_graph, post_to_facebook
+import facebook
+
 
 #This class maintains the list of articles already parsed
 class AlreadyParsedList(object): 
@@ -158,10 +161,12 @@ if __name__=="__main__":
   logger.info("Running arXivHaiku with __name__==__main__")
   
   no_dictionary_update = False
+  facebook_personal_access_token = False
   try:
     opts, args = getopt.getopt(sys.argv[1:],"", ["no-dictionary-update", "input-xml=", \
                                                  "log-level-critical", "log-level-warning", \
-                                                 "log-level-info", "log-level-debug"])
+                                                 "log-level-info", "log-level-debug",
+                                                 "fb-token="])
   except getopt.GetoptError, err:
     print str(err) # will print something like "option -a not recognized"
     logger.critical("Caught getopt.GetoptError")
@@ -180,6 +185,8 @@ if __name__=="__main__":
       no_dictionary_update = True
     elif o == "--input-xml":
       input_xml = a
+    elif o == "--fb-token":
+      facebook_personal_access_token = a
     else:
       print "Unhandled Option\n"
       logger.critical("Unhandled Option")
@@ -187,7 +194,15 @@ if __name__=="__main__":
   if not input_xml:
     print "No input xml set, using default: http://export.arxiv.org/rss/math?mirror=edu"
     input_xml = "http://export.arxiv.org/rss/math?mirror=edu"
-    
+ 
+  if not facebook_personal_access_token:
+    print "Please set a facebook access token" 
+    exit(1)
+
+  arxivhaiku_graph = get_arxivhaiku_graph(facebook_personal_access_token)
+  if arxivhaiku_graph == False:
+    exit(1)
+ 
   try:
     results_queue = Queue.Queue()
     haiku_finding_thread = HaikuFindingThread(input_xml=input_xml,no_dictionary_update=no_dictionary_update, results_queue=results_queue)
@@ -198,12 +213,14 @@ if __name__=="__main__":
         
         successful_input_flag = False
         while not successful_input_flag:
-          x = raw_input("Post the following to twitter after editing (Y/N)?\n" + haiku).strip().lower()
+          x = raw_input("Post the following to twitter after editing (y/n)?\n" + haiku).strip().lower()
           if x == "y":
 	    successful_input_flag = True
 	    haiku = get_text_with_vi(haiku, "\n Edit Haiku to post to twitter.")
 	    if post_status_to_twitter(haiku)[0]:    print "Tweet Successful!"
 	    else:  print "Tweet Failed, see log"
+            if post_to_facebook(arxivhaiku_graph, haiku):  print "fb Post Successful!"
+            else:  print "fb Post Failed, see log (well, not yet, but I will implement this..!"
 	  elif x == "n":
 	    successful_input_flag = True
 	  else:
