@@ -1,9 +1,11 @@
 TODO:
 
-findhaiku has some ugly stuff in it, particularly nsyl etc - no need for this "-" stuff, just replace with " ".  Is the if statement ever called either? 
+Add mini off-switch for fb and twitter, for testing etc
 
-Add "-" to allowed stuff in custom dictionary and stop using it in nsyl
+logging isn't done yet
 
 ah dies when socket dies :|
 
-logging isn't done yet
+findhaiku has some ugly stuff in it, particularly nsyl etc - no need for this "-" stuff, just replace with " ".  Is the if statement ever called either? 
+
+Add "-" to allowed stuff in custom dictionary and stop using it in nsyl
