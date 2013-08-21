@@ -89,10 +89,12 @@ class UntexThreadClass(object):
 #Finds number of syllables in a word
 #If the word is hypenated then use the sum of the word on each side of the dash
 def nsyl(word):  
+    #TODO the behaviour here is strange, why does "-" give a zero syllable count?
     if "-" in word:
-      return sum([nsyl(w) for w in word.split("-")])
-    
-    if word == "": return 0
+      print "Attempting hypenated word: " + str(word)
+      ret = sum([0]+[nsyl(w) for w in word.split("-") if w.split() != ''])
+      print ret
+      return ret
     
     try:    
       #returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
@@ -151,10 +153,11 @@ def find_haiku_in_text(raw_text):
     #   \w  = word
     #   \d  = digit
     #   \s  = whitespace
-    #   \.!\(\):,?;  =  . ! ( ) ; , ? ;
+    #   \.!\(\):,?;-  =  . ! ( ) ; , ? ; - 
     #   Then remove:
-    #   _ \t \n
-    nonalphanumeric_pattern = re.compile(r'([^\w\d\s\.!\(\):,\?;]+|_+|\t+|\n+)')
+    #   _ \t \n -- ---
+    #   Note that hypens are allowed, but only single ones (like in a hypenated word)
+    nonalphanumeric_pattern = re.compile(r'([^\w\d\s\.!\(\):,\?;-]+|_+|\t+|\n+|--|---)')
     paragraphs = [nonalphanumeric_pattern.sub(' ',p).strip() for p in paragraphs]
 
     for paragraph in paragraphs:
