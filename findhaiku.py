@@ -137,18 +137,21 @@ def find_haiku_in_blocks(blocks):
 def find_haiku_in_text(raw_text):    
     haiku_found = []    
     
+    #Split at double line breaks
     paragraphs = raw_text.split("\n\n")
-    #ignore single line breaks, tabs - replace with spaces
-    paragraphs = [p.replace("\n", " ").replace("\t", " ") for p in paragraphs]
     
+    #ignore single line breaks, tabs - replace with spaces
     #remove all non-alphanumeric characters/non-punctuation characters   
-    nonalphanumeric_pattern = re.compile(r'[^\w\d\s\.!\(\):,\?;]+')
+    #   Remove all but:  [^ stuff ]
+    #   \w  = word
+    #   \d  = digit
+    #   \s  = whitespace
+    #   \.!\(\):,?;  =  . ! ( ) ; , ? ;
+    #   Then remove:
+    #   _ \t \n
+    nonalphanumeric_pattern = re.compile(r'([^\w\d\s\.!\(\):,\?;]+|_+|\t+|\n+)')
     paragraphs = [nonalphanumeric_pattern.sub(' ',p).strip() for p in paragraphs]
 
-    #\W used above appears to allow underscores, so we also need:
-    underscore_pattern = re.compile(r'_+')
-    paragraphs = [underscore_pattern.sub(' ',p).strip() for p in paragraphs]
-    
     for paragraph in paragraphs:
       blocks = split_at_punctuation(paragraph)
       haiku_found += find_haiku_in_blocks(blocks)
