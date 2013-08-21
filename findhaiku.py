@@ -40,7 +40,6 @@ d = cmudict.dict()
 from  customdictionary import CustomDictionary, UnknownWordException
 custom_dictionary = None
 
-#If __name__=="__main__" then we will define the logger
 if __name__!="__main__":
   global logger
   logger = logging.getLogger('mainLogger')
@@ -83,8 +82,9 @@ class UntexThreadClass(object):
       untex_thread.join()
     return self.raw_text
 
-def nsyl(word):  #Finds number of syllables in a word
-    #If the word is hypenated then use the sum of the word on each side of the dash
+#Finds number of syllables in a word
+#If the word is hypenated then use the sum of the word on each side of the dash
+def nsyl(word):  
     if "-" in word:
       return sum([nsyl(w) for w in word.split("-")])
     
@@ -205,8 +205,8 @@ if __name__=="__main__":
   try:
     raw_tex = open(input_file, "r").read()
   except IOError as e:
-    print "Can't find input file.\n"
-    logger.critical("Can't find input file")
+    print "Can't read input file:" + str(e) + "\n"
+    logger.critical("Can't read input file : " + str(e))
     sys.exit(2)
   
   custom_dictionary = CustomDictionary(no_dictionary_update=no_dictionary_update)
