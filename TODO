@@ -2,8 +2,6 @@ TODO:
 
 Add mini off-switch for fb and twitter, for testing etc
 
-logging isn't done yet
-
 ah dies when socket dies :|
 
 findhaiku has some ugly stuff in it, particularly nsyl etc - no need for this "-" stuff, just replace with " ".  Is the if statement ever called either? 
