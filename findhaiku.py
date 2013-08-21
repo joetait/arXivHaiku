@@ -30,6 +30,10 @@ def usage():
   Usage: 
   --no-dictionary-update \t Don't add new unknown words or increment unknown/ignored words count
   --input= \t tex file to search for haiku in
+  --log-level-critical
+  --log-level-warning
+  --log-level-info
+  --log-level-debug
   """
 
 import os.path, subprocess, threading, StringIO, re, io, getopt, sys, logging
