@@ -152,6 +152,8 @@ def find_haiku_in_text(raw_text):
     nonalphanumeric_pattern = re.compile(r'([^\w\d\s\.!\(\):,\?;]+|_+|\t+|\n+)')
     paragraphs = [nonalphanumeric_pattern.sub(' ',p).strip() for p in paragraphs]
 
+    logging.debug(str(paragraphs))
+
     for paragraph in paragraphs:
       blocks = split_at_punctuation(paragraph)
       haiku_found += find_haiku_in_blocks(blocks)

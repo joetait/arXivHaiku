@@ -60,7 +60,7 @@ class CustomDictionary(object):
   #If set to true then counts for unknown/ignored words won't be incremented and new unknown words won't be added
   __no_dictionary_update = False
   
-  def __init__(self, custom_dictionary_file="customdictionary.xml", no_dictionary_update = False):   
+  def __init__(self, custom_dictionary_file="customdictionaryreduced.xml", no_dictionary_update = False):   
     self.__custom_dictionary_file = custom_dictionary_file
     self.__no_dictionary_update = no_dictionary_update
     #--------------------
