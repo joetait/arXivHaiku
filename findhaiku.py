@@ -97,6 +97,7 @@ def nsyl(word):
       return custom_dictionary.get_nsyl(word)
     
 #returns list of tuples of form (block,ending_punctuation)
+#   No extra processing, lots of empty and horrible blocks exist at this point
 def split_at_punctuation(paragraph):  
   punctuation = [".","!","(",")",":",",","?",";"] 
   blocks = [paragraph]
@@ -152,10 +153,14 @@ def find_haiku_in_text(raw_text):
     nonalphanumeric_pattern = re.compile(r'([^\w\d\s\.!\(\):,\?;]+|_+|\t+|\n+)')
     paragraphs = [nonalphanumeric_pattern.sub(' ',p).strip() for p in paragraphs]
 
-    logging.debug(str(paragraphs))
-
     for paragraph in paragraphs:
+      # split at punctuation, nothing else
       blocks = split_at_punctuation(paragraph)
+
+      #Throwaway paragraphs with <3 blocks
+      #   Strictly this is not necessary, but will speed things up a bit
+      if len(blocks) < 3: continue
+
       haiku_found += find_haiku_in_blocks(blocks)
     return haiku_found
       
