@@ -4,6 +4,3 @@ Add mini off-switch for fb and twitter, for testing etc
 
 ah dies when socket dies :|
 
-findhaiku has some ugly stuff in it, particularly nsyl etc - no need for this "-" stuff, just replace with " ".  Is the if statement ever called either? 
-
-Add "-" to allowed stuff in custom dictionary and stop using it in nsyl

@@ -89,12 +89,12 @@ class UntexThreadClass(object):
 #Finds number of syllables in a word
 #If the word is hypenated then use the sum of the word on each side of the dash
 def nsyl(word):  
-    #TODO the behaviour here is strange, why does "-" give a zero syllable count?
+    #This is needed for dealing with hypenation stuff below
+    if word == "": return 0
+
     if "-" in word:
       print "Attempting hypenated word: " + str(word)
-      ret = sum([0]+[nsyl(w) for w in word.split("-") if w.split() != ''])
-      print ret
-      return ret
+      return sum([nsyl(w) for w in word.split("-")])
     
     try:    
       #returns the syllable length of a word - d actually returns a list of phonetics, so by default choose first length
